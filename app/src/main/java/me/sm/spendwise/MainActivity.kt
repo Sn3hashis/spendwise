@@ -1,11 +1,13 @@
 package me.sm.spendwise
 
+import android.app.AlertDialog
 import android.os.Bundle
 import android.util.Log
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.addCallback
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.tween
@@ -41,11 +43,28 @@ import me.sm.spendwise.ui.screens.BudgetScreen
 import me.sm.spendwise.ui.screens.ProfileScreen
 import me.sm.spendwise.ui.components.BottomNavigationBar
 import me.sm.spendwise.navigation.NavigationState
+import me.sm.spendwise.ui.screens.ExpenseScreen
+import me.sm.spendwise.ui.screens.IncomeScreen
+import me.sm.spendwise.ui.screens.TransferScreen
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        // Handle back press
+        onBackPressedDispatcher.addCallback(this) {
+            when (NavigationState.currentScreen) {
+                "Home" -> showExitConfirmationDialog()
+                "Expense" -> NavigationState.currentScreen = "Home"
+                "Income" -> NavigationState.currentScreen = "Home"
+                "Transfer" -> NavigationState.currentScreen = "Home"
+                "Transaction" -> NavigationState.currentScreen = "Home"
+                "Budget" -> NavigationState.currentScreen = "Home"
+                "Profile" -> NavigationState.currentScreen = "Home"
+                else -> NavigationState.currentScreen = "Home"
+            }
+        }
 
         setContent {
             SpendwiseTheme {
@@ -127,13 +146,22 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
+    private fun showExitConfirmationDialog() {
+        AlertDialog.Builder(this)
+            .setTitle("Exit App")
+            .setMessage("Are you sure you want to exit?")
+            .setPositiveButton("Yes") { _, _ ->
+                finish()
+            }
+            .setNegativeButton("No", null)
+            .show()
+    }
 }
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun MainScreen() {
-    var showingFilter by remember { mutableStateOf(false) }
-
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -148,17 +176,26 @@ fun MainScreen() {
         ) { screen ->
             when (screen) {
                 "Home" -> HomeScreen()
-                "Transaction" -> TransactionsScreen(
-                    onShowFilter = { showing -> showingFilter = showing }
-                )
+                "Transaction" -> TransactionsScreen()
                 "Budget" -> BudgetScreen()
                 "Profile" -> ProfileScreen()
+                "Expense" -> ExpenseScreen(
+                    onBackPress = { NavigationState.currentScreen = "Home" }
+                )
+                "Income" -> IncomeScreen(
+                    onBackPress = { NavigationState.currentScreen = "Home" }
+                )
+                "Transfer" -> TransferScreen(
+                    onBackPress = { NavigationState.currentScreen = "Home" }
+                )
                 else -> HomeScreen()
             }
         }
         
-        // Only show navbar when filter is not active
-        if (!showingFilter) {
+        // Only show navbar when not in Expense, Income, or Transfer screen
+        if (NavigationState.currentScreen != "Expense" && 
+            NavigationState.currentScreen != "Income" &&
+            NavigationState.currentScreen != "Transfer") {
             BottomNavigationBar()
         }
     }

@@ -73,7 +73,10 @@ fun BottomNavigationBar(modifier: Modifier = Modifier) {
                     MenuButton(
                         icon = R.drawable.ic_transfer_new,
                         backgroundColor = MaterialTheme.colorScheme.surface,
-                        onClick = { /* Handle transfer */ }
+                        onClick = { 
+                            NavigationState.currentScreen = "Transfer"
+                            showPopupMenu = false
+                        }
                     )
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(40.dp),
@@ -82,12 +85,18 @@ fun BottomNavigationBar(modifier: Modifier = Modifier) {
                         MenuButton(
                             icon = R.drawable.ic_income_new,
                             backgroundColor = MaterialTheme.colorScheme.secondaryContainer,
-                            onClick = { /* Handle income */ }
+                            onClick = { 
+                                NavigationState.currentScreen = "Income"
+                                showPopupMenu = false
+                            }
                         )
                         MenuButton(
                             icon = R.drawable.ic_expense,
                             backgroundColor = MaterialTheme.colorScheme.tertiaryContainer,
-                            onClick = { /* Handle expense */ }
+                            onClick = { 
+                                NavigationState.currentScreen = "Expense"
+                                showPopupMenu = false
+                            }
                         )
                     }
                 }
@@ -183,37 +192,36 @@ private fun NavItem(
     item: BottomNavItem,
     onClick: () -> Unit
 ) {
+    val iconSize = if (item.title == "Transaction") 28.dp else 24.dp
+    
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier
-            .clickable(
-                indication = null,
-                interactionSource = remember { MutableInteractionSource() }
-            ) { onClick() }
+        verticalArrangement = Arrangement.Center,
+        modifier = Modifier.clickable(
+            interactionSource = remember { MutableInteractionSource() },
+            indication = null,
+            onClick = onClick
+        )
     ) {
-        Box(
-            modifier = Modifier
-                .size(48.dp)
-                .background(
-                    color = if (item.isSelected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent,
-                    shape = RoundedCornerShape(16.dp)
-                ),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                painter = painterResource(id = item.icon),
-                contentDescription = item.title,
-                modifier = Modifier.size(24.dp),
-                tint = if (item.isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
+        Icon(
+            painter = painterResource(id = item.icon),
+            contentDescription = item.title,
+            modifier = Modifier.size(iconSize),
+            tint = if (item.isSelected) {
+                MaterialTheme.colorScheme.primary
+            } else {
+                MaterialTheme.colorScheme.onSurfaceVariant
+            }
+        )
         if (item.title.isNotEmpty()) {
             Text(
                 text = item.title,
-                color = if (item.isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                 fontSize = 12.sp,
-                fontWeight = if (item.isSelected) FontWeight.Medium else FontWeight.Normal,
-                modifier = Modifier.padding(top = 4.dp)
+                color = if (item.isSelected) {
+                    MaterialTheme.colorScheme.primary
+                } else {
+                    MaterialTheme.colorScheme.onSurfaceVariant
+                }
             )
         }
     }

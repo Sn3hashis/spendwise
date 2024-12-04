@@ -23,20 +23,21 @@ import me.sm.spendwise.R
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.material3.SheetState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TransactionsScreen(
     onShowFilter: (Boolean) -> Unit = {}
 ) {
-    var showFilter by remember { mutableStateOf(false) }
-    var filterCount by remember { mutableStateOf(0) }
-    val sheetState = rememberModalBottomSheetState()
-
-    // Update parent when filter state changes
-    LaunchedEffect(showFilter) {
-        onShowFilter(showFilter)
-    }
+    var showFilter by rememberSaveable { mutableStateOf(false) }
+    var filterCount by rememberSaveable { mutableStateOf(0) }
+    var selectedFilterType by rememberSaveable { mutableStateOf("") }
+    var selectedSortType by rememberSaveable { mutableStateOf("") }
+    val sheetState = rememberModalBottomSheetState(
+        skipPartiallyExpanded = true
+    )
 
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
@@ -65,15 +66,24 @@ fun TransactionsScreen(
                 dragHandle = null,
                 containerColor = MaterialTheme.colorScheme.surface,
                 tonalElevation = 0.dp,
-                modifier = Modifier.fillMaxHeight(0.75f)
+                windowInsets = WindowInsets(0),
+                modifier = Modifier
+                    .fillMaxHeight(0.70f)
+                    .zIndex(1f)
             ) {
-                TransactionFilterScreen(
-                    onDismiss = { showFilter = false },
-                    onApplyFilters = { count -> 
-                        filterCount = count
-                        showFilter = false
-                    }
-                )
+                Box(modifier = Modifier.fillMaxSize()) {
+                    TransactionFilterScreen(
+                        onDismiss = { showFilter = false },
+                        initialFilterType = selectedFilterType,
+                        initialSortType = selectedSortType,
+                        onApplyFilters = { count, filterType, sortType -> 
+                            filterCount = count
+                            selectedFilterType = filterType
+                            selectedSortType = sortType
+                            showFilter = false
+                        }
+                    )
+                }
             }
         }
     }
@@ -117,7 +127,7 @@ private fun Header(
         Box {
             IconButton(onClick = onFilterClick) {
                 Icon(
-                    painter = painterResource(id = R.drawable.ic_filter),
+                    painter = painterResource(id = R.drawable.ic_menu),
                     contentDescription = "Filter",
                     modifier = Modifier.size(24.dp)
                 )
