@@ -2,6 +2,7 @@ package me.sm.spendwise.ui.screens
 
 import android.Manifest
 import android.app.Activity
+import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -33,7 +34,7 @@ import java.io.File
 import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.*
-
+private var tempImageUri: Uri? = null
 @Composable
 fun AttachmentOptionsScreen(
     onDismiss: () -> Unit,
@@ -44,6 +45,7 @@ fun AttachmentOptionsScreen(
 ) {
     val context = LocalContext.current
     val isDarkMode = isSystemInDarkTheme()
+    
     val backgroundColor = if (isDarkMode) {
         MaterialTheme.colorScheme.surface
     } else {
@@ -56,86 +58,67 @@ fun AttachmentOptionsScreen(
         Color.Black.copy(alpha = 0.5f)
     }
 
-    // Permissions and Result Launchers
-    val permissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission(),
-        onResult = { isGranted ->
-            if (isGranted) {
-                onCameraClick() // Call the onCameraClick callback when permission is granted
-            } else {
-                Toast.makeText(context, "Camera permission denied", Toast.LENGTH_SHORT).show()
-            }
+    var tempImageUri by remember { mutableStateOf<Uri?>(null) }
+
+    val takePictureLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicture()
+    ) { isSuccess ->
+        if (isSuccess && tempImageUri != null) {
+            onImagesSelected(listOf(tempImageUri!!))
+            onDismiss()
         }
-    )
+    }
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            val contentValues = ContentValues().apply {
+                put(MediaStore.Images.Media.DISPLAY_NAME, "img_${System.currentTimeMillis()}.jpg")
+                put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
+            }
+            
+            tempImageUri = context.contentResolver.insert(
+                MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                contentValues
+            )
+            
+            tempImageUri?.let { uri ->
+                takePictureLauncher.launch(uri)
+            }
+        } else {
+            Toast.makeText(context, "Camera permission required", Toast.LENGTH_SHORT).show()
+        }
+    }
 
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetMultipleContents(),
         onResult = { uris ->
             if (uris != null && uris.size <= 3) {
-                onImagesSelected(uris) // Handle image selection (limit 3 images)
+                onImagesSelected(uris)
             } else {
                 Toast.makeText(context, "You can select a maximum of 3 images", Toast.LENGTH_SHORT).show()
             }
         }
     )
 
-    val takePictureLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.TakePicture(),
-        onResult = { isSuccess ->
-            val currentImageUri = null
-            if (isSuccess && currentImageUri != null) {
-                onCameraClick() // Handle success (image captured)
-            } else {
-                // Handle failure (e.g. user cancelled or other error)
-                Toast.makeText(context, "Camera capture failed", Toast.LENGTH_SHORT).show()
-            }
-        }
-    )
-
-    // State to hold the URI of the captured image
-    var currentImageUri by remember { mutableStateOf<Uri?>(null) }
-
-    // Create the file URI for the image
-    fun createImageFile(): Uri? {
-        val timeStamp: String = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
-        val storageDir: File? = context.getExternalFilesDir(null) // External storage directory
-        var imageFile: File? = null
-        try {
-            imageFile = File.createTempFile(
-                "JPEG_${timeStamp}_", /* prefix */
-                ".jpg", /* suffix */
-                storageDir /* directory */
-            )
-            currentImageUri = FileProvider.getUriForFile(
-                context,
-                "${context.packageName}.fileprovider",
-                imageFile
-            )
-        } catch (ex: IOException) {
-            ex.printStackTrace()
-        }
-        return currentImageUri
-    }
-
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(overlayColor)
+            .background(color = overlayColor)
             .clickable(
                 indication = null,
                 interactionSource = remember { MutableInteractionSource() }
             ) { onDismiss() }
     ) {
-        // Bottom Sheet Content
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .fillMaxHeight(0.25f)
                 .align(Alignment.BottomCenter)
                 .clip(RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp))
-                .background(backgroundColor)
+                .background(color = backgroundColor)
         ) {
-            // Indicator at top
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -153,7 +136,6 @@ fun AttachmentOptionsScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Options Grid
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -164,11 +146,7 @@ fun AttachmentOptionsScreen(
                     icon = R.drawable.ic_camera,
                     label = "Camera",
                     onClick = {
-                        // Create image file and launch camera intent
-                        val uri = createImageFile()
-                        uri?.let {
-                            takePictureLauncher.launch(uri)
-                        }
+                        permissionLauncher.launch(Manifest.permission.CAMERA)
                     }
                 )
                 AttachmentOption(
@@ -189,7 +167,23 @@ fun AttachmentOptionsScreen(
         }
     }
 }
-
+private fun createImageFile(context: Context): Uri? {
+    val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+    val imageFileName = "JPEG_${timeStamp}_"
+    val storageDir = context.getExternalFilesDir(null)
+    
+    return try {
+        val file = File.createTempFile(imageFileName, ".jpg", storageDir)
+        FileProvider.getUriForFile(
+            context,
+            "${context.packageName}.fileprovider",
+            file
+        )
+    } catch (e: IOException) {
+        e.printStackTrace()
+        null
+    }
+}
 @Composable
 private fun AttachmentOption(
     icon: Int,
