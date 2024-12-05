@@ -21,7 +21,7 @@ import me.sm.spendwise.R
 import me.sm.spendwise.ui.components.SpendFrequencyChart
 
 @Composable
-fun HomeScreen() {
+fun HomeScreen(onNavigateToExpenseDetail: (String) -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -30,22 +30,22 @@ fun HomeScreen() {
     ) {
         // Top Bar
         TopBar()
-        
+
         // Account Balance
         AccountBalance()
-        
+
         // Income/Expense Summary
         FinancialSummary()
-        
+
         // Spend Frequency
         SpendFrequencySection()
-        
+
         // Time Period Selector
         TimePeriodSelector()
-        
+
         // Recent Transactions
-        RecentTransactions()
-        
+        RecentTransactions(onTransactionClick = onNavigateToExpenseDetail)
+
         // Bottom spacing for navigation bar
         Spacer(modifier = Modifier.height(80.dp))
     }
@@ -263,7 +263,7 @@ private fun TimePeriodChip(
 }
 
 @Composable
-private fun RecentTransactions() {
+private fun RecentTransactions(onTransactionClick: (String) -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -295,21 +295,24 @@ private fun RecentTransactions() {
             title = "Shopping",
             subtitle = "Buy some grocery",
             amount = "-$120",
-            time = "10:00 AM"
+            time = "10:00 AM",
+            onClick = { onTransactionClick("Shopping") }
         )
         TransactionItem(
             icon = R.drawable.ic_subscription,
             title = "Subscription",
             subtitle = "Disney+ Annual..",
             amount = "-$80",
-            time = "03:30 PM"
+            time = "03:30 PM",
+            onClick = { onTransactionClick("Subscription") }
         )
         TransactionItem(
             icon = R.drawable.ic_food,
             title = "Food",
             subtitle = "Buy a ramen",
             amount = "-$32",
-            time = "07:30 PM"
+            time = "07:30 PM",
+            onClick = { onTransactionClick("Food") }
         )
     }
 }
@@ -320,12 +323,14 @@ private fun TransactionItem(
     title: String,
     subtitle: String,
     amount: String,
-    time: String
+    time: String,
+    onClick: () -> Unit
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp),
+            .padding(vertical = 8.dp)
+            .clickable(onClick = onClick),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -369,4 +374,5 @@ private fun TransactionItem(
             )
         }
     }
-} 
+}
+

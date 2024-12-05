@@ -6,4 +6,6 @@ import androidx.compose.runtime.setValue
 
 object NavigationState {
     var currentScreen by mutableStateOf("Home")
-} 
+    var currentExpenseId: String? = null
+}
+

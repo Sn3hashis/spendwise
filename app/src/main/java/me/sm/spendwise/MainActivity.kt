@@ -46,6 +46,7 @@ import me.sm.spendwise.navigation.NavigationState
 import me.sm.spendwise.ui.screens.ExpenseScreen
 import me.sm.spendwise.ui.screens.IncomeScreen
 import me.sm.spendwise.ui.screens.TransferScreen
+import me.sm.spendwise.ui.screens.ExpenseDetailScreen
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -62,6 +63,7 @@ class MainActivity : ComponentActivity() {
                 "Transaction" -> NavigationState.currentScreen = "Home"
                 "Budget" -> NavigationState.currentScreen = "Home"
                 "Profile" -> NavigationState.currentScreen = "Home"
+                "ExpenseDetail" -> NavigationState.currentScreen = "Home"
                 else -> NavigationState.currentScreen = "Home"
             }
         }
@@ -171,11 +173,16 @@ fun MainScreen() {
             targetState = NavigationState.currentScreen,
             transitionSpec = {
                 fadeIn(animationSpec = tween(300)) with
-                fadeOut(animationSpec = tween(300))
+                        fadeOut(animationSpec = tween(300))
             }
         ) { screen ->
             when (screen) {
-                "Home" -> HomeScreen()
+                "Home" -> HomeScreen(
+                    onNavigateToExpenseDetail = { expenseId ->
+                        NavigationState.currentScreen = "ExpenseDetail"
+                        NavigationState.currentExpenseId = expenseId
+                    }
+                )
                 "Transaction" -> TransactionsScreen()
                 "Budget" -> BudgetScreen()
                 "Profile" -> ProfileScreen()
@@ -188,14 +195,26 @@ fun MainScreen() {
                 "Transfer" -> TransferScreen(
                     onBackPress = { NavigationState.currentScreen = "Home" }
                 )
-                else -> HomeScreen()
+                "ExpenseDetail" -> ExpenseDetailScreen(
+                    expenseTitle = NavigationState.currentExpenseId ?: "",
+                    onBackPress = { NavigationState.currentScreen = "Home" },
+                    onEditPress = { /* Handle edit action */ },
+                    onDeletePress = { /* Handle delete action */ }
+                )
+                else -> HomeScreen(
+                    onNavigateToExpenseDetail = { expenseId ->
+                        NavigationState.currentScreen = "ExpenseDetail"
+                        NavigationState.currentExpenseId = expenseId
+                    }
+                )
             }
         }
-        
-        // Only show navbar when not in Expense, Income, or Transfer screen
-        if (NavigationState.currentScreen != "Expense" && 
+
+        // Only show navbar when not in Expense, Income, Transfer, or ExpenseDetail screen
+        if (NavigationState.currentScreen != "Expense" &&
             NavigationState.currentScreen != "Income" &&
-            NavigationState.currentScreen != "Transfer") {
+            NavigationState.currentScreen != "Transfer" &&
+            NavigationState.currentScreen != "ExpenseDetail") {
             BottomNavigationBar()
         }
     }
@@ -216,3 +235,4 @@ fun GreetingPreview() {
         Greeting("Android")
     }
 }
+
