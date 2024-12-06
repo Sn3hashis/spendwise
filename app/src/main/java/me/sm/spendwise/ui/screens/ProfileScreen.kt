@@ -21,9 +21,13 @@ import androidx.navigation.NavController
 import androidx.compose.foundation.clickable
 import me.sm.spendwise.R
 import me.sm.spendwise.navigation.NavigationState
+import androidx.compose.runtime.*
+import androidx.compose.material3.AlertDialog
+import androidx.compose.runtime.MutableState
 
 @Composable
 fun ProfileScreen() {
+    val showLogoutDialog = remember { mutableStateOf(false) }
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
@@ -35,8 +39,28 @@ fun ProfileScreen() {
         ) {
             ProfileHeader()
             Spacer(modifier = Modifier.height(48.dp))
-            ProfileMenu()
+            ProfileMenu(showLogoutDialog = showLogoutDialog)
         }
+    }
+    if (showLogoutDialog.value) {
+        AlertDialog(
+            onDismissRequest = { showLogoutDialog.value = false },
+            title = { Text("Logout") },
+            text = { Text("Are you sure you want to logout?") },
+            confirmButton = {
+                TextButton(onClick = {
+                    showLogoutDialog.value = false
+                    NavigationState.navigateToLogin()
+                }) {
+                    Text("Yes")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showLogoutDialog.value = false }) {
+                    Text("No")
+                }
+            }
+        )
     }
 }
 
@@ -89,7 +113,7 @@ fun ProfileHeader() {
 }
 
 @Composable
-fun ProfileMenu() {
+fun ProfileMenu(showLogoutDialog: MutableState<Boolean>) {
     Column(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -113,7 +137,8 @@ fun ProfileMenu() {
         ProfileMenuItem(
             icon = R.drawable.ic_logout,
             title = "Logout",
-            backgroundColor = Color(0xFFFFF0F0)
+            backgroundColor = Color(0xFFFFF0F0),
+            onClick = { showLogoutDialog.value = true }
         )
     }
 }

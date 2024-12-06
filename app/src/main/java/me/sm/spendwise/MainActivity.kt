@@ -3,8 +3,6 @@ package me.sm.spendwise
 import ProfileScreen
 import android.app.AlertDialog
 import android.os.Bundle
-import android.util.Log
-import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -15,20 +13,13 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.with
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.tooling.preview.Preview
 import me.sm.spendwise.ui.theme.SpendwiseTheme
 import me.sm.spendwise.onboarding.OnboardingScreen
 import me.sm.spendwise.auth.LoginScreen
@@ -38,18 +29,9 @@ import me.sm.spendwise.auth.SignUpScreen
 import me.sm.spendwise.auth.VerificationScreen
 import me.sm.spendwise.auth.ForgotPasswordScreen
 import me.sm.spendwise.auth.ForgotPasswordSentScreen
-import me.sm.spendwise.ui.screens.HomeScreen
-import me.sm.spendwise.ui.screens.TransactionsScreen
-import me.sm.spendwise.ui.screens.BudgetScreen
-
+import me.sm.spendwise.ui.screens.*
 import me.sm.spendwise.ui.components.BottomNavigationBar
 import me.sm.spendwise.navigation.NavigationState
-import me.sm.spendwise.ui.screens.ExpenseScreen
-import me.sm.spendwise.ui.screens.IncomeScreen
-import me.sm.spendwise.ui.screens.TransferScreen
-import me.sm.spendwise.ui.screens.ExpenseDetailScreen
-import me.sm.spendwise.ui.screens.SettingsScreen
-
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -60,14 +42,9 @@ class MainActivity : ComponentActivity() {
         onBackPressedDispatcher.addCallback(this) {
             when (NavigationState.currentScreen) {
                 "Home" -> showExitConfirmationDialog()
-                "Expense" -> NavigationState.currentScreen = "Home"
-                "Income" -> NavigationState.currentScreen = "Home"
-                "Transfer" -> NavigationState.currentScreen = "Home"
-                "Transaction" -> NavigationState.currentScreen = "Home"
-                "Budget" -> NavigationState.currentScreen = "Home"
-                "Profile" -> NavigationState.currentScreen = "Home"
-                "ExpenseDetail" -> NavigationState.currentScreen = "Home"
-                else -> NavigationState.currentScreen = "Home"
+                "Settings" -> NavigationState.navigateBack()
+                "Expense", "Income", "Transfer", "Transaction", "Budget", "Profile", "ExpenseDetail" -> NavigationState.navigateTo("Home")
+                else -> NavigationState.navigateTo("Home")
             }
         }
 
@@ -102,7 +79,6 @@ class MainActivity : ComponentActivity() {
                             SignUpScreen(
                                 onSignUpSuccess = { email ->
                                     AppState.currentScreen = Screen.Verification
-                                    // Store email for verification screen
                                     AppState.verificationEmail = email
                                 },
                                 onLoginClick = {
@@ -133,7 +109,7 @@ class MainActivity : ComponentActivity() {
                                     AppState.currentScreen = Screen.Login
                                 },
                                 onContinueClick = { email ->
-                                    AppState.verificationEmail = email  // Store email for confirmation screen
+                                    AppState.verificationEmail = email
                                     AppState.currentScreen = Screen.ForgotPasswordSent
                                 }
                             )
@@ -182,7 +158,7 @@ fun MainScreen() {
             when (screen) {
                 "Home" -> HomeScreen(
                     onNavigateToExpenseDetail = { expenseId ->
-                        NavigationState.currentScreen = "ExpenseDetail"
+                        NavigationState.navigateTo("ExpenseDetail")
                         NavigationState.currentExpenseId = expenseId
                     }
                 )
@@ -190,55 +166,47 @@ fun MainScreen() {
                 "Budget" -> BudgetScreen()
                 "Profile" -> ProfileScreen()
                 "Expense" -> ExpenseScreen(
-                    onBackPress = { NavigationState.currentScreen = "Home" }
+                    onBackPress = { NavigationState.navigateBack() }
                 )
                 "Income" -> IncomeScreen(
-                    onBackPress = { NavigationState.currentScreen = "Home" }
+                    onBackPress = { NavigationState.navigateBack() }
                 )
                 "Transfer" -> TransferScreen(
-                    onBackPress = { NavigationState.currentScreen = "Home" }
+                    onBackPress = { NavigationState.navigateBack() }
                 )
                 "ExpenseDetail" -> ExpenseDetailScreen(
                     expenseTitle = NavigationState.currentExpenseId ?: "",
-                    onBackPress = { NavigationState.currentScreen = "Home" },
+                    onBackPress = { NavigationState.navigateBack() },
                     onEditPress = { /* Handle edit action */ },
                     onDeletePress = { /* Handle delete action */ }
                 )
                 "Settings" -> SettingsScreen(
-                    onBackPress = { NavigationState.navigateBack()}
-                        )
+                    onBackPress = { NavigationState.navigateBack() }
+                )
+                "Login" -> LoginScreen(
+                    onLoginSuccess = {
+                        NavigationState.navigateTo("Home")
+                    },
+                    onSignUpClick = {
+                        NavigationState.navigateTo("SignUp")
+                    },
+                    onForgotPasswordClick = {
+                        NavigationState.navigateTo("ForgotPassword")
+                    }
+                )
                 else -> HomeScreen(
                     onNavigateToExpenseDetail = { expenseId ->
-                        NavigationState.currentScreen = "ExpenseDetail"
+                        NavigationState.navigateTo("ExpenseDetail")
                         NavigationState.currentExpenseId = expenseId
                     }
                 )
             }
         }
 
-        // Only show navbar when not in Expense, Income, Transfer, or ExpenseDetail screen
-        if (NavigationState.currentScreen != "Expense" &&
-            NavigationState.currentScreen != "Income" &&
-            NavigationState.currentScreen != "Transfer" &&
-            NavigationState.currentScreen != "ExpenseDetail") {
+        // Only show navbar when not in Expense, Income, Transfer, ExpenseDetail, or Settings screen
+        if (NavigationState.currentScreen !in listOf("Expense", "Income", "Transfer", "ExpenseDetail", "Settings")) {
             BottomNavigationBar()
         }
-    }
-}
-
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    SpendwiseTheme {
-        Greeting("Android")
     }
 }
 

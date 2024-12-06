@@ -15,11 +15,15 @@ object NavigationState {
     }
 
     fun navigateBack() {
-        if (previousScreen != null) {
-            currentScreen = previousScreen!!
-            previousScreen = null
-        } else {
-            currentScreen = "Home"
+        currentScreen = when (currentScreen) {
+            "Settings" -> "Profile"
+            else -> "Home"
         }
     }
+
+    fun navigateToLogin() {
+        currentScreen = "Login"
+        // Reset any user-specific state here if needed
+    }
 }
+
