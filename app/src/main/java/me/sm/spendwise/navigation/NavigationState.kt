@@ -7,5 +7,19 @@ import androidx.compose.runtime.setValue
 object NavigationState {
     var currentScreen by mutableStateOf("Home")
     var currentExpenseId: String? = null
-}
+    var previousScreen: String? = null
 
+    fun navigateTo(screen: String) {
+        previousScreen = currentScreen
+        currentScreen = screen
+    }
+
+    fun navigateBack() {
+        if (previousScreen != null) {
+            currentScreen = previousScreen!!
+            previousScreen = null
+        } else {
+            currentScreen = "Home"
+        }
+    }
+}

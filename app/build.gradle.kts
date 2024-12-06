@@ -52,6 +52,7 @@ dependencies {
     implementation(libs.androidx.espresso.core)
     implementation(libs.androidx.material.icons.extended)
     implementation("io.coil-kt:coil-compose:2.4.0")
+    implementation ("androidx.navigation:navigation-compose:2.5.3")
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

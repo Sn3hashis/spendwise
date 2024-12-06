@@ -1,5 +1,6 @@
 package me.sm.spendwise
 
+import ProfileScreen
 import android.app.AlertDialog
 import android.os.Bundle
 import android.util.Log
@@ -40,13 +41,14 @@ import me.sm.spendwise.auth.ForgotPasswordSentScreen
 import me.sm.spendwise.ui.screens.HomeScreen
 import me.sm.spendwise.ui.screens.TransactionsScreen
 import me.sm.spendwise.ui.screens.BudgetScreen
-import me.sm.spendwise.ui.screens.ProfileScreen
+
 import me.sm.spendwise.ui.components.BottomNavigationBar
 import me.sm.spendwise.navigation.NavigationState
 import me.sm.spendwise.ui.screens.ExpenseScreen
 import me.sm.spendwise.ui.screens.IncomeScreen
 import me.sm.spendwise.ui.screens.TransferScreen
 import me.sm.spendwise.ui.screens.ExpenseDetailScreen
+
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
