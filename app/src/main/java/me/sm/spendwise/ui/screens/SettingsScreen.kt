@@ -13,11 +13,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import me.sm.spendwise.navigation.NavigationState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingsScreen() {
+fun SettingsScreen(
+    onBackPress: () -> Unit
+) {
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
@@ -34,7 +35,7 @@ fun SettingsScreen() {
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = { NavigationState.navigateBack() }) {
+                    IconButton(onClick = onBackPress) {
                         Icon(
                             imageVector = Icons.Default.ArrowBack,
                             contentDescription = "Back"

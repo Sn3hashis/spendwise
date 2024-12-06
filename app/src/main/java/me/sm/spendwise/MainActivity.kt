@@ -48,6 +48,7 @@ import me.sm.spendwise.ui.screens.ExpenseScreen
 import me.sm.spendwise.ui.screens.IncomeScreen
 import me.sm.spendwise.ui.screens.TransferScreen
 import me.sm.spendwise.ui.screens.ExpenseDetailScreen
+import me.sm.spendwise.ui.screens.SettingsScreen
 
 
 class MainActivity : ComponentActivity() {
@@ -203,6 +204,9 @@ fun MainScreen() {
                     onEditPress = { /* Handle edit action */ },
                     onDeletePress = { /* Handle delete action */ }
                 )
+                "Settings" -> SettingsScreen(
+                    onBackPress = { NavigationState.navigateBack()}
+                        )
                 else -> HomeScreen(
                     onNavigateToExpenseDetail = { expenseId ->
                         NavigationState.currentScreen = "ExpenseDetail"
