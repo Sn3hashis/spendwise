@@ -122,6 +122,16 @@ class MainActivity : ComponentActivity() {
                                 }
                             )
                         }
+                        Screen.Login -> {
+                            LoginScreen(
+                                onSignUpClick = {
+                                    NavigationState.navigateTo("SignUp")
+                                },
+                                onLoginSuccess = TODO(),
+                                onForgotPasswordClick = TODO(),
+                                // ...
+                            )
+                        }
                     }
                 }
             }
@@ -194,6 +204,19 @@ fun MainScreen() {
                         NavigationState.navigateTo("ForgotPassword")
                     }
                 )
+                 // ... existing cases ...
+    "SignUp" -> SignUpScreen(
+        onSignUpSuccess = { email ->
+            NavigationState.navigateTo("Verification")
+            AppState.verificationEmail = email
+        },
+        onLoginClick = {
+            NavigationState.navigateTo("Login")
+        },
+        onBackClick = {
+            NavigationState.navigateTo("Login")
+        }
+    )
                 else -> HomeScreen(
                     onNavigateToExpenseDetail = { expenseId ->
                         NavigationState.navigateTo("ExpenseDetail")
@@ -204,9 +227,8 @@ fun MainScreen() {
         }
 
         // Only show navbar when not in Expense, Income, Transfer, ExpenseDetail, or Settings screen
-        if (NavigationState.currentScreen !in listOf("Expense", "Income", "Transfer", "ExpenseDetail", "Settings")) {
+        if (NavigationState.currentScreen in listOf("Home", "Transaction", "Budget", "Profile")) {
             BottomNavigationBar()
         }
     }
 }
-
