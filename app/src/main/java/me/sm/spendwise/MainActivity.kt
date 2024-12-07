@@ -20,6 +20,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+
 import me.sm.spendwise.ui.theme.SpendwiseTheme
 import me.sm.spendwise.onboarding.OnboardingScreen
 import me.sm.spendwise.auth.LoginScreen
@@ -29,6 +30,8 @@ import me.sm.spendwise.auth.SignUpScreen
 import me.sm.spendwise.auth.VerificationScreen
 import me.sm.spendwise.auth.ForgotPasswordScreen
 import me.sm.spendwise.auth.ForgotPasswordSentScreen
+import me.sm.spendwise.data.CurrencyPreference
+import me.sm.spendwise.data.CurrencyState
 import me.sm.spendwise.data.ThemePreference
 import me.sm.spendwise.ui.screens.*
 import me.sm.spendwise.ui.components.BottomNavigationBar
@@ -37,39 +40,43 @@ import me.sm.spendwise.navigation.Screen as NavScreen // Alias to avoid naming c
 
 class MainActivity : ComponentActivity() {
     private lateinit var themePreference: ThemePreference
+    private lateinit var currencyPreference: CurrencyPreference
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
- themePreference = ThemePreference(this)
+        themePreference = ThemePreference(this)
+        currencyPreference = CurrencyPreference(this)
+
         // Handle back press
-      onBackPressedDispatcher.addCallback(this) {
-    when (NavigationState.currentScreen) {
-        NavScreen.Home -> showExitConfirmationDialog()
-        NavScreen.Settings, 
-        NavScreen.Currency,
-        NavScreen.Theme,
-        NavScreen.Language,
-        NavScreen.Security,
-        NavScreen.Notifications -> NavigationState.navigateBack()
-        NavScreen.Expense, 
-        NavScreen.Income, 
-        NavScreen.Transfer, 
-        NavScreen.Transaction, 
-        NavScreen.Budget, 
-        NavScreen.Profile, 
-        NavScreen.ExpenseDetails -> NavigationState.navigateTo(NavScreen.Home)
-        else -> NavigationState.navigateTo(NavScreen.Home)
-    }
-}
-
-
+        onBackPressedDispatcher.addCallback(this) {
+            when (NavigationState.currentScreen) {
+                NavScreen.Home -> showExitConfirmationDialog()
+                NavScreen.Settings, 
+                NavScreen.Currency,
+                NavScreen.Theme,
+                NavScreen.Language,
+                NavScreen.Security,
+                NavScreen.Notifications -> NavigationState.navigateBack()
+                NavScreen.Expense, 
+                NavScreen.Income, 
+                NavScreen.Transfer, 
+                NavScreen.Transaction, 
+                NavScreen.Budget, 
+                NavScreen.Profile, 
+                NavScreen.ExpenseDetails -> NavigationState.navigateTo(NavScreen.Home)
+                else -> NavigationState.navigateTo(NavScreen.Home)
+            }
+        }
 
         setContent {
             val themeMode by themePreference.themeFlow.collectAsState(initial = ThemeMode.SYSTEM.name)
-            SpendwiseTheme (
+            val currency by currencyPreference.currencyFlow.collectAsState(initial = "USD")
+            CurrencyState.currentCurrency = currency
+            
+            SpendwiseTheme(
                 themeMode = ThemeMode.valueOf(themeMode)
-            ){
-
+            ) {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
@@ -145,6 +152,12 @@ fun MainScreen() {
                     NavigationState.currentExpenseId = expenseId
                     NavigationState.navigateTo(NavScreen.ExpenseDetails)
                 }
+                NavScreen.NotificationView -> NotificationViewScreen(
+                    onBackClick = {NavigationState.navigateBack()} ,
+
+
+                )
+
 
                 NavScreen.Transaction -> TransactionsScreen()
                 NavScreen.Budget -> BudgetScreen()
@@ -168,7 +181,7 @@ fun MainScreen() {
 
                 NavScreen.Currency -> CurrencyScreen(
                     onBackPress = { NavigationState.navigateBack() },
-                    onCurrencySelected = { /* TODO */ }
+
                 )
 
                 NavScreen.Language -> LanguageScreen(

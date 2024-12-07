@@ -19,6 +19,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import me.sm.spendwise.R
 import me.sm.spendwise.ui.components.SpendFrequencyChart
+import me.sm.spendwise.data.CurrencyState
+import me.sm.spendwise.data.NotificationManager
+import me.sm.spendwise.navigation.NavigationState
+import me.sm.spendwise.navigation.Screen as NavScreen
 
 @Composable
 fun HomeScreen(onNavigateToExpenseDetail: (String) -> Unit) {
@@ -86,22 +90,32 @@ private fun TopBar() {
                 modifier = Modifier.padding(start = 4.dp)
             )
         }
-
         // Notification Icon
-        IconButton(
-            onClick = { /* Handle notification */ },
-            modifier = Modifier
-                .size(48.dp)
-                .background(
-                    color = MaterialTheme.colorScheme.primaryContainer,
-                    shape = CircleShape
+        Box {
+            IconButton(
+                onClick = { NavigationState.navigateTo(NavScreen.NotificationView) },
+                modifier = Modifier
+                    .size(48.dp)
+                    .background(
+                        color = MaterialTheme.colorScheme.primaryContainer,
+                        shape = CircleShape
+                    )
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_notification),
+                    contentDescription = "Notifications",
+                    tint = MaterialTheme.colorScheme.primary
                 )
-        ) {
-            Icon(
-                painter = painterResource(id = R.drawable.ic_notification),
-                contentDescription = "Notifications",
-                tint = MaterialTheme.colorScheme.primary
-            )
+            }
+            
+            val unreadCount = NotificationManager.notifications.collectAsState().value.count { !it.isRead }
+            if (unreadCount > 0) {
+                Badge(
+                    modifier = Modifier.align(Alignment.TopEnd)
+                ) {
+                    Text(text = unreadCount.toString())
+                }
+            }
         }
     }
 }
@@ -120,7 +134,7 @@ private fun AccountBalance() {
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
         Text(
-            text = "$9400",
+            text = "${CurrencyState.currentCurrency}9400",
             fontSize = 40.sp,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.padding(top = 8.dp)
@@ -138,7 +152,7 @@ private fun FinancialSummary() {
     ) {
         FinancialCard(
             title = "Income",
-            amount = "$5000",
+            amount = "${CurrencyState.currentCurrency} 5000",
             icon = R.drawable.ic_income_new,
             backgroundColor = MaterialTheme.colorScheme.secondaryContainer,
             contentColor = Color(0xFF00A86B),
@@ -146,7 +160,7 @@ private fun FinancialSummary() {
         )
         FinancialCard(
             title = "Expenses",
-            amount = "$1200",
+            amount = "${CurrencyState.currentCurrency} 1200",
             icon = R.drawable.ic_expense,
             backgroundColor = MaterialTheme.colorScheme.tertiaryContainer,
             contentColor = Color(0xFFFD3C4A),
@@ -197,6 +211,8 @@ private fun FinancialCard(
         }
     }
 }
+
+
 
 @Composable
 private fun SpendFrequencySection() {
@@ -294,7 +310,7 @@ private fun RecentTransactions(onTransactionClick: (String) -> Unit) {
             icon = R.drawable.ic_shopping,
             title = "Shopping",
             subtitle = "Buy some grocery",
-            amount = "-$120",
+            amount = "${CurrencyState.currentCurrency} 120",
             time = "10:00 AM",
             onClick = { onTransactionClick("Shopping") }
         )
@@ -302,7 +318,7 @@ private fun RecentTransactions(onTransactionClick: (String) -> Unit) {
             icon = R.drawable.ic_subscription,
             title = "Subscription",
             subtitle = "Disney+ Annual..",
-            amount = "-$80",
+            amount = "${CurrencyState.currentCurrency}-80",
             time = "03:30 PM",
             onClick = { onTransactionClick("Subscription") }
         )
@@ -316,6 +332,7 @@ private fun RecentTransactions(onTransactionClick: (String) -> Unit) {
         )
     }
 }
+
 
 @Composable
 private fun TransactionItem(

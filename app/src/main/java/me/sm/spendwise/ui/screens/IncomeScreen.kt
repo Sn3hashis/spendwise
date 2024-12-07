@@ -37,6 +37,9 @@ import me.sm.spendwise.navigation.NavigationState
 import androidx.compose.runtime.saveable.rememberSaveable
 import android.net.Uri
 import me.sm.spendwise.navigation.Screen as NavScreen
+import me.sm.spendwise.data.CurrencyState
+import me.sm.spendwise.data.NotificationManager
+
 @Composable
 fun IncomeScreen(
     onBackPress: () -> Unit
@@ -116,7 +119,7 @@ fun IncomeScreen(
                     modifier = Modifier.padding(vertical = 8.dp)
                 ) {
                     Text(
-                        text = "$",
+                        text = CurrencyState.currentCurrency,
                         color = Color.White,
                         fontSize = 72.sp,
                         fontWeight = FontWeight.Bold
@@ -358,7 +361,13 @@ fun IncomeScreen(
                             
                             if (amount.isEmpty() || amount == "0") {
                                 Toast.makeText(context, "Please enter an amount", Toast.LENGTH_SHORT).show()
+                               
                             } else {
+                                NotificationManager.addTransactionNotification(
+    type = "Income",
+    amount = "${CurrencyState.currentCurrency}$amount",
+    category = selectedCategory?.name ?: "General"
+)
                                 Toast.makeText(
                                     context, 
                                     "$${amount} $currency income saved", 

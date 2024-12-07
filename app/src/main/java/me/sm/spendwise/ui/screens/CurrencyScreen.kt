@@ -12,9 +12,13 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.launch
+import me.sm.spendwise.data.CurrencyPreference
+import me.sm.spendwise.data.CurrencyState
 
 data class Currency(
     val name: String,
@@ -24,18 +28,21 @@ data class Currency(
 @Composable
 fun CurrencyScreen(
     onBackPress: () -> Unit,
-    onCurrencySelected: (Currency) -> Unit
+    currencyPreference: CurrencyPreference = CurrencyPreference(LocalContext.current)
 ) {
     val currencies = listOf(
-        Currency("United States", "USD"),
-        Currency("Indonesia", "IDR"),
-        Currency("Japan", "JPY"),
-        Currency("Russia", "RUB"),
-        Currency("Germany", "EUR"),
-        Currency("Korea", "WON")
+       Currency("INR", "₹"),  // Indian Rupee
+Currency("USD", "$"),  // US Dollar
+Currency("IDR", "Rp"), // Indonesian Rupiah
+Currency("JPY", "¥"),  // Japanese Yen
+Currency("RUB", "₽"),  // Russian Ruble
+Currency("EUR", "€"),  // Euro
+Currency("KRW", "₩")   // South Korean Won
+
     )
 
-    var selectedCurrency by remember { mutableStateOf(currencies[0]) }
+    val scope = rememberCoroutineScope()
+    var selectedCurrency by remember { mutableStateOf(CurrencyState.currentCurrency) }
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -81,8 +88,11 @@ fun CurrencyScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable {
-                                selectedCurrency = currency
-                                onCurrencySelected(currency)
+                                selectedCurrency = currency.code
+                                scope.launch {
+                                    currencyPreference.saveCurrency(currency.code)
+                                    CurrencyState.currentCurrency = currency.code
+                                }
                             }
                             .padding(horizontal = 16.dp, vertical = 16.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -93,7 +103,7 @@ fun CurrencyScreen(
                             fontSize = 16.sp,
                             color = MaterialTheme.colorScheme.onSurface
                         )
-                        if (selectedCurrency == currency) {
+                        if (selectedCurrency == currency.code) {
                             Icon(
                                 imageVector = Icons.Default.Check,
                                 contentDescription = "Selected",

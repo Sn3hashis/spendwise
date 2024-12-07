@@ -1,6 +1,5 @@
 package me.sm.spendwise.ui.screens
 
-import android.R.attr.onClick
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
@@ -8,18 +7,18 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import me.sm.spendwise.data.CurrencyPreference
+import me.sm.spendwise.data.ThemePreference
 import me.sm.spendwise.navigation.NavigationState
 import me.sm.spendwise.navigation.Screen
-import androidx.compose.runtime.collectAsState
-import android.content.Context
-import androidx.compose.ui.platform.LocalContext
-import me.sm.spendwise.data.ThemePreference
 
 @Composable
 fun SettingsScreen(
@@ -28,6 +27,9 @@ fun SettingsScreen(
 ) {
     val themePreference = ThemePreference(LocalContext.current)
 val currentTheme by themePreference.themeFlow.collectAsState(initial = ThemeMode.SYSTEM.name)
+val currencyPreference = CurrencyPreference(LocalContext.current)
+val currentCurrency by currencyPreference.currencyFlow.collectAsState(initial = "INR")
+
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -69,7 +71,7 @@ val currentTheme by themePreference.themeFlow.collectAsState(initial = ThemeMode
             ) {
                 SettingsItem(
                     title = "Currency",
-                    value = "USD", // You'll likely want to make this dynamic
+                    value = currentCurrency,
                     onClick = { NavigationState.navigateTo(Screen.Currency) },
                 )
 

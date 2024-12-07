@@ -38,6 +38,8 @@ import java.time.format.DateTimeFormatter
 import android.app.DatePickerDialog
 import java.util.*
 import android.net.Uri
+import me.sm.spendwise.data.CurrencyState
+import me.sm.spendwise.data.NotificationManager
 import me.sm.spendwise.navigation.Screen as NavScreen
 
 @Composable
@@ -139,7 +141,7 @@ fun TransferScreen(
                     modifier = Modifier.padding(vertical = 8.dp)
                 ) {
                     Text(
-                        text = "$",
+                        text = CurrencyState.currentCurrency,
                         color = Color.White,
                         fontSize = 72.sp,
                         fontWeight = FontWeight.Bold
@@ -411,7 +413,13 @@ fun TransferScreen(
                             
                             if (amount.isEmpty() || amount == "0") {
                                 Toast.makeText(context, "Please enter an amount", Toast.LENGTH_SHORT).show()
+                               
                             } else {
+                                  NotificationManager.addTransactionNotification(
+    type = "Transfer",
+    amount = "${CurrencyState.currentCurrency}$amount",
+    category = "Transfer"
+)
                                 Toast.makeText(
                                     context, 
                                     "$${amount} $currency transfer saved", 
