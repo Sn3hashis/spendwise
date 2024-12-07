@@ -1,5 +1,6 @@
 package me.sm.spendwise.ui.screens
 
+import android.R.attr.onClick
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
@@ -13,40 +14,54 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import me.sm.spendwise.navigation.NavigationState
+import me.sm.spendwise.navigation.Screen
+import androidx.compose.runtime.collectAsState
+import android.content.Context
+import androidx.compose.ui.platform.LocalContext
+import me.sm.spendwise.data.ThemePreference
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
-    onBackPress: () -> Unit
+
+    onBackPress: () -> Unit,
 ) {
+    val themePreference = ThemePreference(LocalContext.current)
+val currentTheme by themePreference.themeFlow.collectAsState(initial = ThemeMode.SYSTEM.name)
+
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
     ) {
         Column(
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier
+            .fillMaxWidth()
+        // .padding(horizontal = 16.dp, vertical = 12.dp)
         ) {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = "Settings",
-                        fontSize = 24.sp,
-                        fontWeight = FontWeight.Medium
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 12.dp)
+            ) {
+                IconButton(
+                    onClick = onBackPress,
+                    modifier = Modifier.align(Alignment.CenterStart)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.ArrowBack,
+                        contentDescription = "Back",
+                        modifier = Modifier.size(24.dp)
                     )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBackPress) {
-                        Icon(
-                            imageVector = Icons.Default.ArrowBack,
-                            contentDescription = "Back"
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background
+                }
+                Text(
+                    text = "Settings",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.align(Alignment.Center)
                 )
-            )
+            }
 
+            Divider()
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -54,55 +69,50 @@ fun SettingsScreen(
             ) {
                 SettingsItem(
                     title = "Currency",
-                    value = "USD"
-                )
-
-                SettingsItem(
-                    title = "Language",
-                    value = "English"
+                    value = "USD", // You'll likely want to make this dynamic
+                    onClick = { NavigationState.navigateTo(Screen.Currency) },
                 )
 
                 SettingsItem(
                     title = "Theme",
-                    value = "Dark"
-                )
+                    value = currentTheme.lowercase()
+                        .capitalize(),
+                            // You'll likely want to make this dynamic
 
+                    onClick = { NavigationState.navigateTo(Screen.Theme) },
+                )
                 SettingsItem(
-                    title = "Haptics",
-                    value = "Enabled"
+                    title = "Language",
+                    value = "English", // You'll likely want to make this dynamic
+                    onClick = { NavigationState.navigateTo(Screen.Language) },
                 )
-
                 SettingsItem(
-                    title = "Security",
-                    value = "Fingerprint"
+                    title = "Notifications",
+                    value = "Off", // You'll likely want to make this dynamic
+                    onClick = { NavigationState.navigateTo(Screen.Notifications) },
                 )
-
-                SettingsItem(
-                    title = "Notification",
-                    value = ""
-                )
-
-                Spacer(modifier = Modifier.height(24.dp))
-
                 SettingsItem(
                     title = "About",
-                    value = ""
+                    value = "",
+                    onClick = { NavigationState.navigateTo(Screen.About) },
+                )
+                SettingsItem(
+                    title = "Security",
+                    value = "",
+                    onClick = { NavigationState.navigateTo(Screen.Security) },
                 )
 
-                SettingsItem(
-                    title = "Help",
-                    value = ""
-                )
+
+                // ... other settings items
             }
         }
     }
 }
-
 @Composable
 fun SettingsItem(
     title: String,
     value: String,
-    onClick: () -> Unit = {}
+    onClick: () -> Unit
 ) {
     Row(
         modifier = Modifier

@@ -19,12 +19,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import me.sm.spendwise.R
 import me.sm.spendwise.navigation.NavigationState
 import androidx.compose.runtime.*
 import androidx.compose.material3.AlertDialog
 import androidx.compose.runtime.MutableState
-
+import androidx.compose.ui.text.style.TextAlign
+import me.sm.spendwise.ui.AppState
+import me.sm.spendwise.navigation.Screen as NavScreen
 @Composable
 fun ProfileScreen() {
     val showLogoutDialog = remember { mutableStateOf(false) }
@@ -50,7 +53,7 @@ fun ProfileScreen() {
             confirmButton = {
                 TextButton(onClick = {
                     showLogoutDialog.value = false
-                    NavigationState.navigateToLogin()
+                    AppState.logout() 
                 }) {
                     Text("Yes")
                 }
@@ -87,27 +90,19 @@ fun ProfileHeader() {
             )
         }
         Spacer(modifier = Modifier.height(24.dp))
-        Text(
-            text = "Username",
-            color = Color.Gray,
-            fontSize = 16.sp
-        )
+
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
+            horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "Iriana Saliha",
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Bold
+                text = "Snehashis Mukherjee",
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center,
             )
-            IconButton(onClick = { /* Handle edit click */ }) {
-                Icon(
-                    imageVector = Icons.Default.Edit,
-                    contentDescription = "Edit Profile"
-                )
-            }
+
         }
     }
 }
@@ -127,7 +122,7 @@ fun ProfileMenu(showLogoutDialog: MutableState<Boolean>) {
             icon = R.drawable.ic_settings,
             title = "Settings",
             backgroundColor = Color(0xFFF3F0FF),
-            onClick = { NavigationState.navigateTo("Settings") }
+            onClick = { NavigationState.navigateTo(NavScreen.Settings) }
         )
         ProfileMenuItem(
             icon = R.drawable.ic_upload,

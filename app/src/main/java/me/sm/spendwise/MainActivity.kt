@@ -29,109 +29,84 @@ import me.sm.spendwise.auth.SignUpScreen
 import me.sm.spendwise.auth.VerificationScreen
 import me.sm.spendwise.auth.ForgotPasswordScreen
 import me.sm.spendwise.auth.ForgotPasswordSentScreen
+import me.sm.spendwise.data.ThemePreference
 import me.sm.spendwise.ui.screens.*
 import me.sm.spendwise.ui.components.BottomNavigationBar
 import me.sm.spendwise.navigation.NavigationState
+import me.sm.spendwise.navigation.Screen as NavScreen // Alias to avoid naming conflicts
 
 class MainActivity : ComponentActivity() {
+    private lateinit var themePreference: ThemePreference
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-
+ themePreference = ThemePreference(this)
         // Handle back press
-        onBackPressedDispatcher.addCallback(this) {
-            when (NavigationState.currentScreen) {
-                "Home" -> showExitConfirmationDialog()
-                "Settings" -> NavigationState.navigateBack()
-                "Expense", "Income", "Transfer", "Transaction", "Budget", "Profile", "ExpenseDetail" -> NavigationState.navigateTo("Home")
-                else -> NavigationState.navigateTo("Home")
-            }
-        }
+      onBackPressedDispatcher.addCallback(this) {
+    when (NavigationState.currentScreen) {
+        NavScreen.Home -> showExitConfirmationDialog()
+        NavScreen.Settings, 
+        NavScreen.Currency,
+        NavScreen.Theme,
+        NavScreen.Language,
+        NavScreen.Security,
+        NavScreen.Notifications -> NavigationState.navigateBack()
+        NavScreen.Expense, 
+        NavScreen.Income, 
+        NavScreen.Transfer, 
+        NavScreen.Transaction, 
+        NavScreen.Budget, 
+        NavScreen.Profile, 
+        NavScreen.ExpenseDetails -> NavigationState.navigateTo(NavScreen.Home)
+        else -> NavigationState.navigateTo(NavScreen.Home)
+    }
+}
+
+
 
         setContent {
-            SpendwiseTheme {
+            val themeMode by themePreference.themeFlow.collectAsState(initial = ThemeMode.SYSTEM.name)
+            SpendwiseTheme (
+                themeMode = ThemeMode.valueOf(themeMode)
+            ){
+
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
+                    // Assuming AppState.currentScreen is also using the NavScreen enum
                     when (AppState.currentScreen) {
-                        Screen.Onboarding -> {
-                            OnboardingScreen(
-                                onFinish = {
-                                    AppState.currentScreen = Screen.Login
-                                }
-                            )
-                        }
-                        Screen.Login -> {
-                            LoginScreen(
-                                onLoginSuccess = {
-                                    AppState.currentScreen = Screen.Main
-                                },
-                                onSignUpClick = {
-                                    AppState.currentScreen = Screen.SignUp
-                                },
-                                onForgotPasswordClick = {
-                                    AppState.currentScreen = Screen.ForgotPassword
-                                }
-                            )
-                        }
-                        Screen.SignUp -> {
-                            SignUpScreen(
-                                onSignUpSuccess = { email ->
-                                    AppState.currentScreen = Screen.Verification
-                                    AppState.verificationEmail = email
-                                },
-                                onLoginClick = {
-                                    AppState.currentScreen = Screen.Login
-                                },
-                                onBackClick = {
-                                    AppState.currentScreen = Screen.Login
-                                }
-                            )
-                        }
-                        Screen.Verification -> {
-                            VerificationScreen(
-                                email = AppState.verificationEmail,
-                                onBackClick = {
-                                    AppState.currentScreen = Screen.SignUp
-                                },
-                                onVerificationComplete = {
-                                    AppState.currentScreen = Screen.Main
-                                }
-                            )
-                        }
-                        Screen.Main -> {
-                            MainScreen()
-                        }
-                        Screen.ForgotPassword -> {
-                            ForgotPasswordScreen(
-                                onBackClick = {
-                                    AppState.currentScreen = Screen.Login
-                                },
-                                onContinueClick = { email ->
-                                    AppState.verificationEmail = email
-                                    AppState.currentScreen = Screen.ForgotPasswordSent
-                                }
-                            )
-                        }
-                        Screen.ForgotPasswordSent -> {
-                            ForgotPasswordSentScreen(
-                                email = AppState.verificationEmail,
-                                onBackToLoginClick = {
-                                    AppState.currentScreen = Screen.Login
-                                }
-                            )
-                        }
-                        Screen.Login -> {
-                            LoginScreen(
-                                onSignUpClick = {
-                                    NavigationState.navigateTo("SignUp")
-                                },
-                                onLoginSuccess = TODO(),
-                                onForgotPasswordClick = TODO(),
-                                // ...
-                            )
-                        }
+                        Screen.Onboarding -> OnboardingScreen(onFinish = { AppState.currentScreen = Screen.Login })
+                        Screen.Login -> LoginScreen(
+                            onLoginSuccess = { AppState.currentScreen = Screen.Main },
+                            onSignUpClick = { AppState.currentScreen = Screen.SignUp },
+                            onForgotPasswordClick = { AppState.currentScreen = Screen.ForgotPassword }
+                        )
+                        Screen.SignUp -> SignUpScreen(
+                            onSignUpSuccess = { email ->
+                                AppState.currentScreen = Screen.Verification
+                                AppState.verificationEmail = email
+                            },
+                            onLoginClick = { AppState.currentScreen = Screen.Login },
+                            onBackClick = { AppState.currentScreen = Screen.Login }
+                        )
+                        Screen.Verification -> VerificationScreen(
+                            email = AppState.verificationEmail,
+                            onBackClick = { AppState.currentScreen = Screen.SignUp },
+                            onVerificationComplete = { AppState.currentScreen = Screen.Main }
+                        )
+                        Screen.ForgotPassword -> ForgotPasswordScreen(
+                            onBackClick = { AppState.currentScreen = Screen.Login },
+                            onContinueClick = { email ->
+                                AppState.verificationEmail = email
+                                AppState.currentScreen = Screen.ForgotPasswordSent
+                            }
+                        )
+                        Screen.ForgotPasswordSent -> ForgotPasswordSentScreen(
+                            email = AppState.verificationEmail,
+                            onBackToLoginClick = { AppState.currentScreen = Screen.Login }
+                        )
+                        Screen.Main -> MainScreen()
                     }
                 }
             }
@@ -148,7 +123,7 @@ class MainActivity : ComponentActivity() {
             .setNegativeButton("No", null)
             .show()
     }
-}
+
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
@@ -166,69 +141,71 @@ fun MainScreen() {
             }
         ) { screen ->
             when (screen) {
-                "Home" -> HomeScreen(
-                    onNavigateToExpenseDetail = { expenseId ->
-                        NavigationState.navigateTo("ExpenseDetail")
-                        NavigationState.currentExpenseId = expenseId
-                    }
-                )
-                "Transaction" -> TransactionsScreen()
-                "Budget" -> BudgetScreen()
-                "Profile" -> ProfileScreen()
-                "Expense" -> ExpenseScreen(
-                    onBackPress = { NavigationState.navigateBack() }
-                )
-                "Income" -> IncomeScreen(
-                    onBackPress = { NavigationState.navigateBack() }
-                )
-                "Transfer" -> TransferScreen(
-                    onBackPress = { NavigationState.navigateBack() }
-                )
-                "ExpenseDetail" -> ExpenseDetailScreen(
+                NavScreen.Home -> HomeScreen { expenseId ->
+                    NavigationState.currentExpenseId = expenseId
+                    NavigationState.navigateTo(NavScreen.ExpenseDetails)
+                }
+
+                NavScreen.Transaction -> TransactionsScreen()
+                NavScreen.Budget -> BudgetScreen()
+                NavScreen.Profile -> ProfileScreen()
+                NavScreen.Expense -> ExpenseScreen { NavigationState.navigateBack() }
+                NavScreen.Income -> IncomeScreen { NavigationState.navigateBack() }
+                NavScreen.Transfer -> TransferScreen { NavigationState.navigateBack() }
+                NavScreen.ExpenseDetails -> ExpenseDetailScreen(
                     expenseTitle = NavigationState.currentExpenseId ?: "",
                     onBackPress = { NavigationState.navigateBack() },
                     onEditPress = { /* Handle edit action */ },
                     onDeletePress = { /* Handle delete action */ }
                 )
-                "Settings" -> SettingsScreen(
-                    onBackPress = { NavigationState.navigateBack() }
+
+                NavScreen.Settings -> SettingsScreen { NavigationState.navigateBack() }
+                NavScreen.Theme -> ThemeScreen(
+                    onBackPress = { NavigationState.navigateBack() },
+
+                    themePreference = themePreference
                 )
-                "Login" -> LoginScreen(
-                    onLoginSuccess = {
-                        NavigationState.navigateTo("Home")
-                    },
-                    onSignUpClick = {
-                        NavigationState.navigateTo("SignUp")
-                    },
-                    onForgotPasswordClick = {
-                        NavigationState.navigateTo("ForgotPassword")
-                    }
+
+                NavScreen.Currency -> CurrencyScreen(
+                    onBackPress = { NavigationState.navigateBack() },
+                    onCurrencySelected = { /* TODO */ }
                 )
-                 // ... existing cases ...
-    "SignUp" -> SignUpScreen(
-        onSignUpSuccess = { email ->
-            NavigationState.navigateTo("Verification")
-            AppState.verificationEmail = email
-        },
-        onLoginClick = {
-            NavigationState.navigateTo("Login")
-        },
-        onBackClick = {
-            NavigationState.navigateTo("Login")
-        }
-    )
-                else -> HomeScreen(
-                    onNavigateToExpenseDetail = { expenseId ->
-                        NavigationState.navigateTo("ExpenseDetail")
-                        NavigationState.currentExpenseId = expenseId
-                    }
+
+                NavScreen.Language -> LanguageScreen(
+                    onBackPress = { NavigationState.navigateBack() },
+                    onLanguageSelected = { /* TODO */ }
                 )
+
+                NavScreen.Notifications -> NotificationScreen(
+                    onBackPress = { NavigationState.navigateBack() },
+//                    onNotificationSettingChanged = {/* TODO */}
+                )
+
+                NavScreen.Security -> SecurityScreen(
+                    onBackPress = { NavigationState.navigateBack() },
+                    onSecurityMethodSelected = { /* TODO */ }
+                )
+//                NavScreen.About -> AboutScreen(
+//                    onBackPress = { NavigationState.navigateBack() },
+//                    onAboutSelected = { /* TODO */ }
+//                )
+                // ... other NavScreen enum values, including Login and SignUp
+                else -> HomeScreen { expenseId ->
+                    NavigationState.currentExpenseId = expenseId
+                    NavigationState.navigateTo(NavScreen.ExpenseDetails)
+                }
             }
         }
 
-        // Only show navbar when not in Expense, Income, Transfer, ExpenseDetail, or Settings screen
-        if (NavigationState.currentScreen in listOf("Home", "Transaction", "Budget", "Profile")) {
+        if (NavigationState.currentScreen in listOf(
+                NavScreen.Home,
+                NavScreen.Transaction,
+                NavScreen.Budget,
+                NavScreen.Profile
+            )
+        ) {
             BottomNavigationBar()
         }
     }
+}
 }

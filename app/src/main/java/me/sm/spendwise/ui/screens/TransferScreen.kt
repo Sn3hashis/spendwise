@@ -38,6 +38,7 @@ import java.time.format.DateTimeFormatter
 import android.app.DatePickerDialog
 import java.util.*
 import android.net.Uri
+import me.sm.spendwise.navigation.Screen as NavScreen
 
 @Composable
 fun TransferScreen(
@@ -416,7 +417,7 @@ fun TransferScreen(
                                     "$${amount} $currency transfer saved", 
                                     Toast.LENGTH_SHORT
                                 ).show()
-                                NavigationState.currentScreen = "Home"
+                                NavigationState.navigateTo(NavScreen.Home)
                             }
                         },
                         modifier = Modifier
