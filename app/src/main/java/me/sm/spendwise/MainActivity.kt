@@ -20,6 +20,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+
 import me.sm.spendwise.ui.theme.SpendwiseTheme
 import me.sm.spendwise.onboarding.OnboardingScreen
 import me.sm.spendwise.auth.LoginScreen
@@ -151,6 +152,12 @@ fun MainScreen() {
                     NavigationState.currentExpenseId = expenseId
                     NavigationState.navigateTo(NavScreen.ExpenseDetails)
                 }
+                NavScreen.NotificationView -> NotificationViewScreen(
+                    onBackClick = {NavigationState.navigateBack()} ,
+
+
+                )
+
 
                 NavScreen.Transaction -> TransactionsScreen()
                 NavScreen.Budget -> BudgetScreen()

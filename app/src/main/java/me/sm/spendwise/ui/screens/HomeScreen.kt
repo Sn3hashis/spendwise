@@ -20,6 +20,9 @@ import androidx.compose.ui.unit.sp
 import me.sm.spendwise.R
 import me.sm.spendwise.ui.components.SpendFrequencyChart
 import me.sm.spendwise.data.CurrencyState
+import me.sm.spendwise.data.NotificationManager
+import me.sm.spendwise.navigation.NavigationState
+import me.sm.spendwise.navigation.Screen as NavScreen
 
 @Composable
 fun HomeScreen(onNavigateToExpenseDetail: (String) -> Unit) {
@@ -87,22 +90,32 @@ private fun TopBar() {
                 modifier = Modifier.padding(start = 4.dp)
             )
         }
-
         // Notification Icon
-        IconButton(
-            onClick = { /* Handle notification */ },
-            modifier = Modifier
-                .size(48.dp)
-                .background(
-                    color = MaterialTheme.colorScheme.primaryContainer,
-                    shape = CircleShape
+        Box {
+            IconButton(
+                onClick = { NavigationState.navigateTo(NavScreen.NotificationView) },
+                modifier = Modifier
+                    .size(48.dp)
+                    .background(
+                        color = MaterialTheme.colorScheme.primaryContainer,
+                        shape = CircleShape
+                    )
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_notification),
+                    contentDescription = "Notifications",
+                    tint = MaterialTheme.colorScheme.primary
                 )
-        ) {
-            Icon(
-                painter = painterResource(id = R.drawable.ic_notification),
-                contentDescription = "Notifications",
-                tint = MaterialTheme.colorScheme.primary
-            )
+            }
+            
+            val unreadCount = NotificationManager.notifications.collectAsState().value.count { !it.isRead }
+            if (unreadCount > 0) {
+                Badge(
+                    modifier = Modifier.align(Alignment.TopEnd)
+                ) {
+                    Text(text = unreadCount.toString())
+                }
+            }
         }
     }
 }

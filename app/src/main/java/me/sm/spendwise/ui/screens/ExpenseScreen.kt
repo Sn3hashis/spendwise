@@ -51,6 +51,7 @@ import androidx.compose.ui.platform.LocalView
 import android.net.Uri
 import me.sm.spendwise.navigation.Screen as NavScreen
 import me.sm.spendwise.data.CurrencyState
+import me.sm.spendwise.data.NotificationManager
 
 @Composable
 fun ExpenseScreen(
@@ -378,7 +379,14 @@ fun ExpenseScreen(
                             
                             if (amount.isEmpty() || amount == "0") {
                                 Toast.makeText(context, "Please enter an amount", Toast.LENGTH_SHORT).show()
+                               
                             } else {
+                                NotificationManager.addTransactionNotification(
+    type = "Expense",
+    amount = "${CurrencyState.currentCurrency}$amount",
+    category = selectedCategory?.name ?: "General"
+)
+
                                 Toast.makeText(
                                     context, 
                                     "${CurrencyState.currentCurrency} ${amount} expense saved", 
@@ -386,6 +394,7 @@ fun ExpenseScreen(
                                 ).show()
                                 NavigationState.navigateTo(NavScreen.Home)
                             }
+
                         },
                         modifier = Modifier
                             .fillMaxWidth()

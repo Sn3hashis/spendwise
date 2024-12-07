@@ -17,14 +17,18 @@ enum class Screen {
     ExpenseDetails,
     AttachmentOptions,
     TransactionFilter,
-    Notification,
+    ExpenseScreen,
+    IncomeScreen,
+    ExpenseCategoryScreen,
+    IncomeCategoryScreen,
     Language,
     Transfer,
     Transaction,
     Budget,
     Security,
     Notifications,
-    About
+    About,
+    NotificationView
 }
 
 object NavigationState {
@@ -44,7 +48,9 @@ fun navigateBack() {
         Screen.Notifications -> Screen.Settings
         Screen.ExpenseDetails, Screen.AttachmentOptions -> Screen.Expense
         Screen.TransactionFilter -> Screen.Home
-        Screen.Notification -> Screen.Settings
+        Screen.NotificationView -> Screen.Home
+        Screen.IncomeCategoryScreen ->Screen.IncomeScreen
+        Screen.ExpenseCategoryScreen -> Screen.ExpenseScreen
         else -> Screen.Home
     }
 }
