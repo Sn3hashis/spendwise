@@ -38,6 +38,7 @@ import java.time.format.DateTimeFormatter
 import android.app.DatePickerDialog
 import java.util.*
 import android.net.Uri
+import me.sm.spendwise.data.CurrencyState
 import me.sm.spendwise.navigation.Screen as NavScreen
 
 @Composable
@@ -139,7 +140,7 @@ fun TransferScreen(
                     modifier = Modifier.padding(vertical = 8.dp)
                 ) {
                     Text(
-                        text = "$",
+                        text = CurrencyState.currentCurrency,
                         color = Color.White,
                         fontSize = 72.sp,
                         fontWeight = FontWeight.Bold

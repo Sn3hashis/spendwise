@@ -50,6 +50,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.platform.LocalView
 import android.net.Uri
 import me.sm.spendwise.navigation.Screen as NavScreen
+import me.sm.spendwise.data.CurrencyState
 
 @Composable
 fun ExpenseScreen(
@@ -71,7 +72,6 @@ fun ExpenseScreen(
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
     val view = LocalView.current
-    val currency = "USD"  // Replace with actual user currency
 
     if (showCategorySelector) {
         ExpenseCategoryScreen(
@@ -133,7 +133,7 @@ fun ExpenseScreen(
                     modifier = Modifier.padding(vertical = 8.dp)
                 ) {
                     Text(
-                        text = "$",
+                        text = CurrencyState.currentCurrency,
                         color = Color.White,
                         fontSize = 72.sp,
                         fontWeight = FontWeight.Bold
@@ -381,7 +381,7 @@ fun ExpenseScreen(
                             } else {
                                 Toast.makeText(
                                     context, 
-                                    "$${amount} $currency expense saved", 
+                                    "${CurrencyState.currentCurrency} ${amount} expense saved", 
                                     Toast.LENGTH_SHORT
                                 ).show()
                                 NavigationState.navigateTo(NavScreen.Home)
@@ -430,7 +430,6 @@ fun ExpenseScreen(
         )
     }
 }
-
 // Add number input dialog function
 private fun showNumberInputDialog(context: Context, onAmountEntered: (String) -> Unit) {
     val builder = AlertDialog.Builder(context)

@@ -37,6 +37,7 @@ import me.sm.spendwise.navigation.NavigationState
 import androidx.compose.runtime.saveable.rememberSaveable
 import android.net.Uri
 import me.sm.spendwise.navigation.Screen as NavScreen
+import me.sm.spendwise.data.CurrencyState
 @Composable
 fun IncomeScreen(
     onBackPress: () -> Unit
@@ -116,7 +117,7 @@ fun IncomeScreen(
                     modifier = Modifier.padding(vertical = 8.dp)
                 ) {
                     Text(
-                        text = "$",
+                        text = CurrencyState.currentCurrency,
                         color = Color.White,
                         fontSize = 72.sp,
                         fontWeight = FontWeight.Bold
