@@ -49,7 +49,7 @@ import android.view.HapticFeedbackConstants
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.platform.LocalView
 import android.net.Uri
-
+import me.sm.spendwise.navigation.Screen as NavScreen
 
 @Composable
 fun ExpenseScreen(
@@ -384,7 +384,7 @@ fun ExpenseScreen(
                                     "$${amount} $currency expense saved", 
                                     Toast.LENGTH_SHORT
                                 ).show()
-                                NavigationState.currentScreen = "Home"
+                                NavigationState.navigateTo(NavScreen.Home)
                             }
                         },
                         modifier = Modifier

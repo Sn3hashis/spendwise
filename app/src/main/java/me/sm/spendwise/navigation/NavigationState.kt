@@ -4,26 +4,48 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 
-object NavigationState {
-    var currentScreen by mutableStateOf("Home")
-    var currentExpenseId: String? = null
-    var previousScreen: String? = null
+enum class Screen {
+    Home,
+    Expense,
+    Income,
+    Profile,
+    Settings,
+    Currency,
+    Theme,
+    Login,
+    ExpenseDetails,
+    AttachmentOptions,
+    TransactionFilter,
+    Notification,
+    Language,
+    Transfer,
+    Transaction,
+    Budget,
+    Security,
+    Notifications,
+    About
+}
 
-    fun navigateTo(screen: String) {
-        previousScreen = currentScreen
+object NavigationState {
+    var currentScreen by mutableStateOf(Screen.Home)
+    var currentExpenseId: String? = null
+
+    fun navigateTo(screen: Screen) {
         currentScreen = screen
     }
 
     fun navigateBack() {
         currentScreen = when (currentScreen) {
-            "Settings" -> "Profile"
-            else -> "Home"
+            Screen.Settings,   -> Screen.Profile
+            Screen.ExpenseDetails, Screen.AttachmentOptions -> Screen.Expense
+            Screen.TransactionFilter -> Screen.Home
+            Screen.Notification -> Screen.Settings
+            Screen.Currency,Screen.Theme, Screen.Language -> Screen.Settings
+            else -> Screen.Home
         }
     }
 
     fun navigateToLogin() {
-        currentScreen = "Login"
-        // Reset any user-specific state here if needed
+        currentScreen = Screen.Login
     }
 }
-

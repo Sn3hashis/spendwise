@@ -24,7 +24,7 @@ import me.sm.spendwise.navigation.NavigationState
 import androidx.compose.runtime.*
 import androidx.compose.material3.AlertDialog
 import androidx.compose.runtime.MutableState
-
+import me.sm.spendwise.navigation.Screen as NavScreen
 @Composable
 fun ProfileScreen() {
     val showLogoutDialog = remember { mutableStateOf(false) }
@@ -127,7 +127,7 @@ fun ProfileMenu(showLogoutDialog: MutableState<Boolean>) {
             icon = R.drawable.ic_settings,
             title = "Settings",
             backgroundColor = Color(0xFFF3F0FF),
-            onClick = { NavigationState.navigateTo("Settings") }
+            onClick = { NavigationState.navigateTo(NavScreen.Settings) }
         )
         ProfileMenuItem(
             icon = R.drawable.ic_upload,

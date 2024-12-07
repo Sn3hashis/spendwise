@@ -1,5 +1,6 @@
 package me.sm.spendwise.ui.screens
 
+import android.R.attr.onClick
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
@@ -13,11 +14,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import me.sm.spendwise.navigation.NavigationState
+import me.sm.spendwise.navigation.Screen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
-    onBackPress: () -> Unit
+    onBackPress: () -> Unit,
 ) {
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -46,7 +49,7 @@ fun SettingsScreen(
                     containerColor = MaterialTheme.colorScheme.background
                 )
             )
-
+            Divider(thickness = 0.7.dp, color = Color.LightGray)
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -54,55 +57,47 @@ fun SettingsScreen(
             ) {
                 SettingsItem(
                     title = "Currency",
-                    value = "USD"
-                )
-
-                SettingsItem(
-                    title = "Language",
-                    value = "English"
+                    value = "USD", // You'll likely want to make this dynamic
+                    onClick = { NavigationState.navigateTo(Screen.Currency) },
                 )
 
                 SettingsItem(
                     title = "Theme",
-                    value = "Dark"
+                    value = "Light", // You'll likely want to make this dynamic
+                    onClick = { NavigationState.navigateTo(Screen.Theme) },
                 )
-
                 SettingsItem(
-                    title = "Haptics",
-                    value = "Enabled"
+                    title = "Language",
+                    value = "English", // You'll likely want to make this dynamic
+                    onClick = { NavigationState.navigateTo(Screen.Language) },
                 )
-
                 SettingsItem(
-                    title = "Security",
-                    value = "Fingerprint"
+                    title = "Notifications",
+                    value = "Off", // You'll likely want to make this dynamic
+                    onClick = { NavigationState.navigateTo(Screen.Notifications) },
                 )
-
-                SettingsItem(
-                    title = "Notification",
-                    value = ""
-                )
-
-                Spacer(modifier = Modifier.height(24.dp))
-
                 SettingsItem(
                     title = "About",
-                    value = ""
+                    value = "",
+                    onClick = { NavigationState.navigateTo(Screen.About) },
+                )
+                SettingsItem(
+                    title = "Security",
+                    value = "",
+                    onClick = { NavigationState.navigateTo(Screen.Security) },
                 )
 
-                SettingsItem(
-                    title = "Help",
-                    value = ""
-                )
+
+                // ... other settings items
             }
         }
     }
 }
-
 @Composable
 fun SettingsItem(
     title: String,
     value: String,
-    onClick: () -> Unit = {}
+    onClick: () -> Unit
 ) {
     Row(
         modifier = Modifier

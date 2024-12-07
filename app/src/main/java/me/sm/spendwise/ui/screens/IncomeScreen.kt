@@ -36,7 +36,7 @@ import me.sm.spendwise.R
 import me.sm.spendwise.navigation.NavigationState
 import androidx.compose.runtime.saveable.rememberSaveable
 import android.net.Uri
-
+import me.sm.spendwise.navigation.Screen as NavScreen
 @Composable
 fun IncomeScreen(
     onBackPress: () -> Unit
@@ -364,7 +364,7 @@ fun IncomeScreen(
                                     "$${amount} $currency income saved", 
                                     Toast.LENGTH_SHORT
                                 ).show()
-                                NavigationState.currentScreen = "Home"
+                                NavigationState.navigateTo(NavScreen.Home)
                             }
                         },
                         modifier = Modifier
