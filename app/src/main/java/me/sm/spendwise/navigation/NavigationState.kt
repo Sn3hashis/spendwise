@@ -3,6 +3,7 @@ package me.sm.spendwise.navigation
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import me.sm.spendwise.navigation.NavigationState.currentScreen
 
 enum class Screen {
     Home,
@@ -33,19 +34,28 @@ object NavigationState {
     fun navigateTo(screen: Screen) {
         currentScreen = screen
     }
-
-    fun navigateBack() {
-        currentScreen = when (currentScreen) {
-            Screen.Settings,   -> Screen.Profile
-            Screen.ExpenseDetails, Screen.AttachmentOptions -> Screen.Expense
-            Screen.TransactionFilter -> Screen.Home
-            Screen.Notification -> Screen.Settings
-            Screen.Currency,Screen.Theme, Screen.Language -> Screen.Settings
-            else -> Screen.Home
-        }
-    }
-
-    fun navigateToLogin() {
-        currentScreen = Screen.Login
+fun navigateBack() {
+    currentScreen = when (currentScreen) {
+        Screen.Settings -> Screen.Profile
+        Screen.Currency -> Screen.Settings
+        Screen.Theme -> Screen.Settings  
+        Screen.Language -> Screen.Settings
+        Screen.Security -> Screen.Settings
+        Screen.Notifications -> Screen.Settings
+        Screen.ExpenseDetails, Screen.AttachmentOptions -> Screen.Expense
+        Screen.TransactionFilter -> Screen.Home
+        Screen.Notification -> Screen.Settings
+        else -> Screen.Home
     }
 }
+    fun reset() {
+        currentScreen = Screen.Home
+    }
+}
+
+
+
+    // fun navigateToLogin() {
+    //     currentScreen = Screen.Login
+    // }
+

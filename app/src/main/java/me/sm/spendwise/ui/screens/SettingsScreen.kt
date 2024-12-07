@@ -17,7 +17,6 @@ import androidx.compose.ui.unit.sp
 import me.sm.spendwise.navigation.NavigationState
 import me.sm.spendwise.navigation.Screen
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
     onBackPress: () -> Unit,
@@ -27,29 +26,34 @@ fun SettingsScreen(
         color = MaterialTheme.colorScheme.background
     ) {
         Column(
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier
+            .fillMaxWidth()
+        // .padding(horizontal = 16.dp, vertical = 12.dp)
         ) {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = "Settings",
-                        fontSize = 24.sp,
-                        fontWeight = FontWeight.Medium
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 12.dp)
+            ) {
+                IconButton(
+                    onClick = onBackPress,
+                    modifier = Modifier.align(Alignment.CenterStart)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.ArrowBack,
+                        contentDescription = "Back",
+                        modifier = Modifier.size(24.dp)
                     )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBackPress) {
-                        Icon(
-                            imageVector = Icons.Default.ArrowBack,
-                            contentDescription = "Back"
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background
+                }
+                Text(
+                    text = "Settings",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.align(Alignment.Center)
                 )
-            )
-            Divider(thickness = 0.7.dp, color = Color.LightGray)
+            }
+
+            Divider()
             Column(
                 modifier = Modifier
                     .fillMaxWidth()

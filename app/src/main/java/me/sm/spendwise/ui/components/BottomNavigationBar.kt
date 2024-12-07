@@ -29,15 +29,15 @@ fun BottomNavigationBar() {
         Surface(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(85.dp)
+                .height(80.dp)
                 .align(Alignment.BottomCenter),
             color = MaterialTheme.colorScheme.surface.copy(alpha = 0.8f), // Glass effect
-            shadowElevation = 0.dp // Remove shadow
+            shadowElevation = 5.dp // Remove shadow
         ) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(color = MaterialTheme.colorScheme.surface.copy(alpha = 0.5f)) // Additional blur effect
+                    .background(color = MaterialTheme.colorScheme.surface.copy(alpha = 1f)) // Additional blur effect
             ) {
                 Row(
                     modifier = Modifier
@@ -153,16 +153,21 @@ private fun PopupMenu(onDismiss: () -> Unit) {
             .clickable(
                 indication = null,
                 interactionSource = remember { MutableInteractionSource() }
-            ) { onDismiss() },
-        contentAlignment = Alignment.Center
+            ) { onDismiss() }
     ) {
         Surface(
             modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = 90.dp) // Position above navbar
                 .padding(horizontal = 24.dp)
                 .clip(RoundedCornerShape(28.dp)),
             color = MaterialTheme.colorScheme.surface
         ) {
-            Column(modifier = Modifier.padding(vertical = 8.dp)) {
+            Row(
+                modifier = Modifier.padding(16.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 PopupMenuItem(
                     icon = R.drawable.ic_expense,
                     text = "Expense",
@@ -172,15 +177,17 @@ private fun PopupMenu(onDismiss: () -> Unit) {
                         onDismiss()
                     }
                 )
+                Spacer(modifier = Modifier.width(16.dp))
                 PopupMenuItem(
                     icon = R.drawable.ic_income_new,
-                    text = "Income",
+                    text = "Income", 
                     backgroundColor = MaterialTheme.colorScheme.tertiaryContainer,
                     onClick = {
                         NavigationState.navigateTo(NavScreen.Income)
                         onDismiss()
                     }
                 )
+                Spacer(modifier = Modifier.width(16.dp))
                 PopupMenuItem(
                     icon = R.drawable.ic_transfer_new,
                     text = "Transfer",
@@ -202,40 +209,35 @@ private fun PopupMenuItem(
     backgroundColor: Color,
     onClick: () -> Unit
 ) {
-    Surface(
+    Column(
         modifier = Modifier
-            .fillMaxWidth()
             .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        color = Color.Transparent
+            .padding(8.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
     ) {
-        Row(
-            modifier = Modifier.padding(8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
+        Surface(
+            modifier = Modifier.size(48.dp),
+            shape = CircleShape,
+            color = backgroundColor
         ) {
-            Surface(
-                modifier = Modifier.size(if (text == "Transfer") 56.dp else 48.dp), // Larger size for Transfer
-                shape = CircleShape,
-                color = backgroundColor
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
             ) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        painter = painterResource(id = icon),
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onSurface,
-                        modifier = Modifier.size(if (text == "Transfer") 32.dp else 24.dp) // Larger icon for Transfer
-                    )
-                }
+                Icon(
+                    painter = painterResource(id = icon),
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.size(24.dp)
+                )
             }
-            Text(
-                text = text,
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurface
-            )
         }
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = text,
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurface
+        )
     }
 }

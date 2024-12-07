@@ -40,14 +40,28 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         // Handle back press
-        onBackPressedDispatcher.addCallback(this) {
-            when (NavigationState.currentScreen) {
-                NavScreen.Home -> showExitConfirmationDialog()
-                NavScreen.Settings -> NavigationState.navigateBack()
-                NavScreen.Expense, NavScreen.Income, NavScreen.Transfer, NavScreen.Transaction, NavScreen.Budget, NavScreen.Profile, NavScreen.ExpenseDetails -> NavigationState.navigateTo(NavScreen.Home)
-                else -> NavigationState.navigateTo(NavScreen.Home)
-            }
-        }
+      onBackPressedDispatcher.addCallback(this) {
+    when (NavigationState.currentScreen) {
+        NavScreen.Home -> showExitConfirmationDialog()
+        NavScreen.Settings, 
+        NavScreen.Currency,
+        NavScreen.Theme,
+        NavScreen.Language,
+        NavScreen.Security,
+        NavScreen.Notifications -> NavigationState.navigateBack()
+        NavScreen.Expense, 
+        NavScreen.Income, 
+        NavScreen.Transfer, 
+        NavScreen.Transaction, 
+        NavScreen.Budget, 
+        NavScreen.Profile, 
+        NavScreen.ExpenseDetails -> NavigationState.navigateTo(NavScreen.Home)
+        else -> NavigationState.navigateTo(NavScreen.Home)
+    }
+}
+
+
+// Add this to MainActivity.kt where other AppState related code exists
 
         setContent {
             SpendwiseTheme {
