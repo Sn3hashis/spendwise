@@ -29,16 +29,18 @@ import me.sm.spendwise.auth.SignUpScreen
 import me.sm.spendwise.auth.VerificationScreen
 import me.sm.spendwise.auth.ForgotPasswordScreen
 import me.sm.spendwise.auth.ForgotPasswordSentScreen
+import me.sm.spendwise.data.ThemePreference
 import me.sm.spendwise.ui.screens.*
 import me.sm.spendwise.ui.components.BottomNavigationBar
 import me.sm.spendwise.navigation.NavigationState
 import me.sm.spendwise.navigation.Screen as NavScreen // Alias to avoid naming conflicts
 
 class MainActivity : ComponentActivity() {
+    private lateinit var themePreference: ThemePreference
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-
+ themePreference = ThemePreference(this)
         // Handle back press
       onBackPressedDispatcher.addCallback(this) {
     when (NavigationState.currentScreen) {
@@ -61,10 +63,13 @@ class MainActivity : ComponentActivity() {
 }
 
 
-// Add this to MainActivity.kt where other AppState related code exists
 
         setContent {
-            SpendwiseTheme {
+            val themeMode by themePreference.themeFlow.collectAsState(initial = ThemeMode.SYSTEM.name)
+            SpendwiseTheme (
+                themeMode = ThemeMode.valueOf(themeMode)
+            ){
+
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
@@ -118,7 +123,7 @@ class MainActivity : ComponentActivity() {
             .setNegativeButton("No", null)
             .show()
     }
-}
+
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
@@ -140,6 +145,7 @@ fun MainScreen() {
                     NavigationState.currentExpenseId = expenseId
                     NavigationState.navigateTo(NavScreen.ExpenseDetails)
                 }
+
                 NavScreen.Transaction -> TransactionsScreen()
                 NavScreen.Budget -> BudgetScreen()
                 NavScreen.Profile -> ProfileScreen()
@@ -152,23 +158,29 @@ fun MainScreen() {
                     onEditPress = { /* Handle edit action */ },
                     onDeletePress = { /* Handle delete action */ }
                 )
+
                 NavScreen.Settings -> SettingsScreen { NavigationState.navigateBack() }
                 NavScreen.Theme -> ThemeScreen(
                     onBackPress = { NavigationState.navigateBack() },
-                    onThemeSelected = { /* TODO */ }
+
+                    themePreference = themePreference
                 )
+
                 NavScreen.Currency -> CurrencyScreen(
                     onBackPress = { NavigationState.navigateBack() },
                     onCurrencySelected = { /* TODO */ }
                 )
+
                 NavScreen.Language -> LanguageScreen(
                     onBackPress = { NavigationState.navigateBack() },
                     onLanguageSelected = { /* TODO */ }
                 )
+
                 NavScreen.Notifications -> NotificationScreen(
                     onBackPress = { NavigationState.navigateBack() },
 //                    onNotificationSettingChanged = {/* TODO */}
                 )
+
                 NavScreen.Security -> SecurityScreen(
                     onBackPress = { NavigationState.navigateBack() },
                     onSecurityMethodSelected = { /* TODO */ }
@@ -177,16 +189,23 @@ fun MainScreen() {
 //                    onBackPress = { NavigationState.navigateBack() },
 //                    onAboutSelected = { /* TODO */ }
 //                )
-                    // ... other NavScreen enum values, including Login and SignUp
-                    else -> HomeScreen { expenseId ->
+                // ... other NavScreen enum values, including Login and SignUp
+                else -> HomeScreen { expenseId ->
                     NavigationState.currentExpenseId = expenseId
                     NavigationState.navigateTo(NavScreen.ExpenseDetails)
                 }
             }
         }
 
-        if (NavigationState.currentScreen in listOf(NavScreen.Home, NavScreen.Transaction, NavScreen.Budget, NavScreen.Profile)) {
+        if (NavigationState.currentScreen in listOf(
+                NavScreen.Home,
+                NavScreen.Transaction,
+                NavScreen.Budget,
+                NavScreen.Profile
+            )
+        ) {
             BottomNavigationBar()
         }
     }
+}
 }

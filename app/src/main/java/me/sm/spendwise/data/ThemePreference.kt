@@ -7,6 +7,7 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import me.sm.spendwise.ui.screens.ThemeMode
 
 private val Context.dataStore by preferencesDataStore(name = "theme_settings")
 

@@ -16,11 +16,19 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import me.sm.spendwise.navigation.NavigationState
 import me.sm.spendwise.navigation.Screen
+import androidx.compose.runtime.collectAsState
+import android.content.Context
+import androidx.compose.ui.platform.LocalContext
+import me.sm.spendwise.data.ThemePreference
 
 @Composable
 fun SettingsScreen(
+
     onBackPress: () -> Unit,
 ) {
+    val themePreference = ThemePreference(LocalContext.current)
+val currentTheme by themePreference.themeFlow.collectAsState(initial = ThemeMode.SYSTEM.name)
+
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
@@ -67,7 +75,10 @@ fun SettingsScreen(
 
                 SettingsItem(
                     title = "Theme",
-                    value = "Light", // You'll likely want to make this dynamic
+                    value = currentTheme.lowercase()
+                        .capitalize(),
+                            // You'll likely want to make this dynamic
+
                     onClick = { NavigationState.navigateTo(Screen.Theme) },
                 )
                 SettingsItem(

@@ -13,6 +13,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.launch
+import me.sm.spendwise.data.ThemePreference
 
 enum class ThemeMode {
     LIGHT, DARK, SYSTEM
@@ -21,9 +23,17 @@ enum class ThemeMode {
 @Composable
 fun ThemeScreen(
     onBackPress: () -> Unit,
-    onThemeSelected: (ThemeMode) -> Unit
+    themePreference: ThemePreference
 ) {
-    var selectedTheme by remember { mutableStateOf(ThemeMode.LIGHT) }
+    val scope = rememberCoroutineScope()
+    var selectedTheme by remember { mutableStateOf(ThemeMode.SYSTEM) }
+
+    // Load current theme
+    LaunchedEffect(Unit) {
+        themePreference.themeFlow.collect { theme ->
+            selectedTheme = ThemeMode.valueOf(theme)
+        }
+    }
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -69,7 +79,9 @@ fun ThemeScreen(
                     isSelected = selectedTheme == ThemeMode.LIGHT,
                     onClick = {
                         selectedTheme = ThemeMode.LIGHT
-                        onThemeSelected(ThemeMode.LIGHT)
+                        scope.launch {
+                            themePreference.saveThemeMode(ThemeMode.LIGHT)
+                        }
                     }
                 )
                 ThemeOption(
@@ -77,7 +89,9 @@ fun ThemeScreen(
                     isSelected = selectedTheme == ThemeMode.DARK,
                     onClick = {
                         selectedTheme = ThemeMode.DARK
-                        onThemeSelected(ThemeMode.DARK)
+                        scope.launch {
+                            themePreference.saveThemeMode(ThemeMode.DARK)
+                        }
                     }
                 )
                 ThemeOption(
@@ -85,7 +99,9 @@ fun ThemeScreen(
                     isSelected = selectedTheme == ThemeMode.SYSTEM,
                     onClick = {
                         selectedTheme = ThemeMode.SYSTEM
-                        onThemeSelected(ThemeMode.SYSTEM)
+                        scope.launch {
+                            themePreference.saveThemeMode(ThemeMode.SYSTEM)
+                        }
                     }
                 )
             }
