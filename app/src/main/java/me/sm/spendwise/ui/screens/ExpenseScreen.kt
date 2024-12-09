@@ -52,7 +52,10 @@ import android.net.Uri
 import me.sm.spendwise.navigation.Screen as NavScreen
 import me.sm.spendwise.data.CurrencyState
 import me.sm.spendwise.data.NotificationManager
+import me.sm.spendwise.data.Transaction
+import me.sm.spendwise.data.TransactionManager
 
+import me.sm.spendwise.utils.*
 @Composable
 fun ExpenseScreen(
     onBackPress: () -> Unit
@@ -386,6 +389,21 @@ fun ExpenseScreen(
     amount = "${CurrencyState.currentCurrency}$amount",
     category = selectedCategory?.name ?: "General"
 )
+// When saving expense/income
+TransactionManager.addTransaction(
+    Transaction(
+        type = "Expense",
+        title = description,  // Use description instead of title
+        category = selectedCategory?.name ?: "General",
+        amount = "${CurrencyState.currentCurrency}$amount",
+        time = getCurrentTime(),
+        date = getCurrentDate(),
+        icon = getCategoryIcon(selectedCategory?.name ?: "General"),
+        backgroundColor = getCategoryColor(selectedCategory?.name ?: "General"),
+        isIncome = false
+    )
+)
+
 
                                 Toast.makeText(
                                     context, 

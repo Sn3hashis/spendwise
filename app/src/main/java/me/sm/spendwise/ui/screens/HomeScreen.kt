@@ -21,7 +21,9 @@ import me.sm.spendwise.R
 import me.sm.spendwise.ui.components.SpendFrequencyChart
 import me.sm.spendwise.data.CurrencyState
 import me.sm.spendwise.data.NotificationManager
+import me.sm.spendwise.data.TransactionManager
 import me.sm.spendwise.navigation.NavigationState
+import me.sm.spendwise.ui.screens.TransactionItem
 import me.sm.spendwise.navigation.Screen as NavScreen
 
 @Composable
@@ -295,44 +297,37 @@ private fun RecentTransactions(onTransactionClick: (String) -> Unit) {
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold
             )
-            TextButton(onClick = { /* Handle see all */ }) {
-                Text(
-                    text = "See All",
-                    color = MaterialTheme.colorScheme.primary
-                )
+            TextButton(onClick = { NavigationState.navigateTo(NavScreen.Transaction) }) {
+                Text("See All")
             }
         }
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Transaction Items
-        TransactionItem(
-            icon = R.drawable.ic_shopping,
-            title = "Shopping",
-            subtitle = "Buy some grocery",
-            amount = "${CurrencyState.currentCurrency} 120",
-            time = "10:00 AM",
-            onClick = { onTransactionClick("Shopping") }
-        )
-        TransactionItem(
-            icon = R.drawable.ic_subscription,
-            title = "Subscription",
-            subtitle = "Disney+ Annual..",
-            amount = "${CurrencyState.currentCurrency}-80",
-            time = "03:30 PM",
-            onClick = { onTransactionClick("Subscription") }
-        )
-        TransactionItem(
-            icon = R.drawable.ic_food,
-            title = "Food",
-            subtitle = "Buy a ramen",
-            amount = "-$32",
-            time = "07:30 PM",
-            onClick = { onTransactionClick("Food") }
-        )
+        // Get recent transactions
+        val recentTransactions = TransactionManager.getRecentTransactions()
+        
+        if (recentTransactions.isEmpty()) {
+            Text(
+                text = "No transactions yet",
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = TextAlign.Center,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        } else {
+            recentTransactions.forEach { transaction ->
+                TransactionItem(
+                    icon = transaction.icon,
+                    title = transaction.title,
+                    subtitle = transaction.category,
+                    amount = transaction.amount,
+                    time = transaction.time,
+                    onClick = { onTransactionClick(transaction.id) }
+                )
+            }
+        }
     }
 }
-
 
 @Composable
 private fun TransactionItem(

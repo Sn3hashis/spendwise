@@ -25,6 +25,7 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.material3.SheetState
+import me.sm.spendwise.data.TransactionManager
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -177,72 +178,50 @@ private fun FinancialReportCard() {
 
 @Composable
 private fun TransactionsList() {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 24.dp)
-    ) {
-        // Today Section
-        Text(
-            text = "Today",
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(bottom = 16.dp)
-        )
-        
-        TransactionItem(
-            icon = R.drawable.ic_shopping,
-            title = "Shopping",
-            subtitle = "Buy some grocery",
-            amount = "-$120",
-            time = "10:00 AM",
-            backgroundColor = Color(0xFFFCEED4)
-        )
-        
-        TransactionItem(
-            icon = R.drawable.ic_subscription,
-            title = "Subscription",
-            subtitle = "Disney+ Annual..",
-            amount = "-$80",
-            time = "03:30 PM",
-            backgroundColor = Color(0xFFEEE5FF)
-        )
-        
-        TransactionItem(
-            icon = R.drawable.ic_food,
-            title = "Food",
-            subtitle = "Buy a ramen",
-            amount = "-$32",
-            time = "07:30 PM",
-            backgroundColor = Color(0xFFFFE2E4)
-        )
-
-        // Yesterday Section
-        Text(
-            text = "Yesterday",
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(top = 24.dp, bottom = 16.dp)
-        )
-        
-        TransactionItem(
-            icon = R.drawable.ic_income_new,
-            title = "Salary",
-            subtitle = "Salary for July",
-            amount = "+$5000",
-            time = "04:30 PM",
-            backgroundColor = Color(0xFFCFFAEA),
-            isIncome = true
-        )
-        
-        TransactionItem(
-            icon = R.drawable.ic_transport,
-            title = "Transportation",
-            subtitle = "Charging Tesla",
-            amount = "-$18",
-            time = "08:30 PM",
-            backgroundColor = Color(0xFFD1EFFF)
-        )
+    val transactions = TransactionManager.transactions
+    
+    if (transactions.isEmpty()) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "No transactions available",
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    } else {
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp)
+        ) {
+            // Group transactions by date
+            val groupedTransactions = transactions.groupBy { it.date }
+            
+            groupedTransactions.forEach { (date, transactionsForDate) ->
+                item {
+                    Text(
+                        text = date,
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(vertical = 16.dp)
+                    )
+                    
+                    transactionsForDate.forEach { transaction ->
+                        TransactionItem(
+                            icon = transaction.icon,
+                            title = transaction.title,
+                            subtitle = transaction.category,
+                            amount = transaction.amount,
+                            time = transaction.time,
+                            backgroundColor = transaction.backgroundColor,
+                            isIncome = transaction.isIncome
+                        )
+                    }
+                }
+            }
+        }
     }
 }
 

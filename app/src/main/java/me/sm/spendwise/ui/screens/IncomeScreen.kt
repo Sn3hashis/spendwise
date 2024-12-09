@@ -1,5 +1,4 @@
 package me.sm.spendwise.ui.screens
-
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -39,7 +38,9 @@ import android.net.Uri
 import me.sm.spendwise.navigation.Screen as NavScreen
 import me.sm.spendwise.data.CurrencyState
 import me.sm.spendwise.data.NotificationManager
-
+import me.sm.spendwise.data.Transaction
+import me.sm.spendwise.data.TransactionManager
+import me.sm.spendwise.utils.*
 @Composable
 fun IncomeScreen(
     onBackPress: () -> Unit
@@ -368,6 +369,21 @@ fun IncomeScreen(
     amount = "${CurrencyState.currentCurrency}$amount",
     category = selectedCategory?.name ?: "General"
 )
+// When saving expense/income
+TransactionManager.addTransaction(
+    Transaction(
+        type = "Income",
+        title = description,  // Use description instead of title
+        category = selectedCategory?.name ?: "General",
+        amount = "${CurrencyState.currentCurrency}$amount",
+        time = getCurrentTime(),
+        date = getCurrentDate(),
+        icon = getCategoryIcon(selectedCategory?.name ?: "General"),
+        backgroundColor = getCategoryColor(selectedCategory?.name ?: "General"),
+        isIncome = false
+    )
+)
+
                                 Toast.makeText(
                                     context, 
                                     "$${amount} $currency income saved", 

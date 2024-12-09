@@ -69,6 +69,8 @@ class MainActivity : ComponentActivity() {
                 NavScreen.Budget,
                 NavScreen.Profile,
                 NavScreen.ExpenseDetails -> NavigationState.navigateTo(NavScreen.Home)
+                NavScreen.ExpenseCategoryScreen -> NavigationState.navigateTo(NavScreen.Expense)
+                NavScreen.IncomeCategoryScreen -> NavigationState.navigateTo(NavScreen.IncomeScreen)
                 else -> NavigationState.navigateTo(NavScreen.Home)
             }
         }
