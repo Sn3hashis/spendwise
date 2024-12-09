@@ -1,5 +1,6 @@
 package me.sm.spendwise
 
+
 import ProfileScreen
 import android.app.AlertDialog
 import android.os.Bundle
@@ -36,7 +37,9 @@ import me.sm.spendwise.data.ThemePreference
 import me.sm.spendwise.ui.screens.*
 import me.sm.spendwise.ui.components.BottomNavigationBar
 import me.sm.spendwise.navigation.NavigationState
-import me.sm.spendwise.navigation.Screen as NavScreen // Alias to avoid naming conflicts
+import me.sm.spendwise.navigation.Screen as NavScreen
+import androidx.compose.runtime.mutableStateListOf
+import me.sm.spendwise.ui.screens.Payee
 
 class MainActivity : ComponentActivity() {
     private lateinit var themePreference: ThemePreference
@@ -48,22 +51,23 @@ class MainActivity : ComponentActivity() {
         themePreference = ThemePreference(this)
         currencyPreference = CurrencyPreference(this)
 
-        // Handle back press
         onBackPressedDispatcher.addCallback(this) {
             when (NavigationState.currentScreen) {
                 NavScreen.Home -> showExitConfirmationDialog()
-                NavScreen.Settings, 
+                NavScreen.Settings,
                 NavScreen.Currency,
                 NavScreen.Theme,
                 NavScreen.Language,
                 NavScreen.Security,
+                NavScreen.AddNewPayee,
                 NavScreen.Notifications -> NavigationState.navigateBack()
-                NavScreen.Expense, 
-                NavScreen.Income, 
-                NavScreen.Transfer, 
-                NavScreen.Transaction, 
-                NavScreen.Budget, 
-                NavScreen.Profile, 
+                NavScreen.ManagePayee -> NavigationState.navigateTo(NavScreen.Profile)
+                NavScreen.Expense,
+                NavScreen.Income,
+                NavScreen.Transfer,
+                NavScreen.Transaction,
+                NavScreen.Budget,
+                NavScreen.Profile,
                 NavScreen.ExpenseDetails -> NavigationState.navigateTo(NavScreen.Home)
                 else -> NavigationState.navigateTo(NavScreen.Home)
             }
@@ -73,7 +77,7 @@ class MainActivity : ComponentActivity() {
             val themeMode by themePreference.themeFlow.collectAsState(initial = ThemeMode.SYSTEM.name)
             val currency by currencyPreference.currencyFlow.collectAsState(initial = "USD")
             CurrencyState.currentCurrency = currency
-            
+
             SpendwiseTheme(
                 themeMode = ThemeMode.valueOf(themeMode)
             ) {
@@ -81,7 +85,6 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    // Assuming AppState.currentScreen is also using the NavScreen enum
                     when (AppState.currentScreen) {
                         Screen.Onboarding -> OnboardingScreen(onFinish = { AppState.currentScreen = Screen.Login })
                         Screen.Login -> LoginScreen(
@@ -131,94 +134,128 @@ class MainActivity : ComponentActivity() {
             .show()
     }
 
+    @OptIn(ExperimentalAnimationApi::class)
+    @Composable
+    fun MainScreen() {
+        val payees = remember { mutableStateListOf<Payee>() }
 
-@OptIn(ExperimentalAnimationApi::class)
-@Composable
-fun MainScreen() {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .statusBarsPadding()
-    ) {
-        AnimatedContent(
-            targetState = NavigationState.currentScreen,
-            transitionSpec = {
-                fadeIn(animationSpec = tween(300)) with
-                        fadeOut(animationSpec = tween(300))
-            }
-        ) { screen ->
-            when (screen) {
-                NavScreen.Home -> HomeScreen { expenseId ->
-                    NavigationState.currentExpenseId = expenseId
-                    NavigationState.navigateTo(NavScreen.ExpenseDetails)
-                }
-                NavScreen.NotificationView -> NotificationViewScreen(
-                    onBackClick = {NavigationState.navigateBack()} ,
-
-
-                )
-
-
-                NavScreen.Transaction -> TransactionsScreen()
-                NavScreen.Budget -> BudgetScreen()
-                NavScreen.Profile -> ProfileScreen()
-                NavScreen.Expense -> ExpenseScreen { NavigationState.navigateBack() }
-                NavScreen.Income -> IncomeScreen { NavigationState.navigateBack() }
-                NavScreen.Transfer -> TransferScreen { NavigationState.navigateBack() }
-                NavScreen.ExpenseDetails -> ExpenseDetailScreen(
-                    expenseTitle = NavigationState.currentExpenseId ?: "",
-                    onBackPress = { NavigationState.navigateBack() },
-                    onEditPress = { /* Handle edit action */ },
-                    onDeletePress = { /* Handle delete action */ }
-                )
-
-                NavScreen.Settings -> SettingsScreen { NavigationState.navigateBack() }
-                NavScreen.Theme -> ThemeScreen(
-                    onBackPress = { NavigationState.navigateBack() },
-
-                    themePreference = themePreference
-                )
-
-                NavScreen.Currency -> CurrencyScreen(
-                    onBackPress = { NavigationState.navigateBack() },
-
-                )
-
-                NavScreen.Language -> LanguageScreen(
-                    onBackPress = { NavigationState.navigateBack() },
-                    onLanguageSelected = { /* TODO */ }
-                )
-
-                NavScreen.Notifications -> NotificationScreen(
-                    onBackPress = { NavigationState.navigateBack() },
-//                    onNotificationSettingChanged = {/* TODO */}
-                )
-
-                NavScreen.Security -> SecurityScreen(
-                    onBackPress = { NavigationState.navigateBack() },
-                    onSecurityMethodSelected = { /* TODO */ }
-                )
-//                NavScreen.About -> AboutScreen(
-//                    onBackPress = { NavigationState.navigateBack() },
-//                    onAboutSelected = { /* TODO */ }
-//                )
-                // ... other NavScreen enum values, including Login and SignUp
-                else -> HomeScreen { expenseId ->
-                    NavigationState.currentExpenseId = expenseId
-                    NavigationState.navigateTo(NavScreen.ExpenseDetails)
-                }
-            }
-        }
-
-        if (NavigationState.currentScreen in listOf(
-                NavScreen.Home,
-                NavScreen.Transaction,
-                NavScreen.Budget,
-                NavScreen.Profile
-            )
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .statusBarsPadding()
         ) {
-            BottomNavigationBar()
+            AnimatedContent(
+                targetState = NavigationState.currentScreen,
+                transitionSpec = {
+                    fadeIn(animationSpec = tween(300)) with
+                            fadeOut(animationSpec = tween(300))
+                }
+            ) { screen ->
+                when (screen) {
+                    NavScreen.Home -> HomeScreen { expenseId ->
+                        NavigationState.currentExpenseId = expenseId
+                        NavigationState.navigateTo(NavScreen.ExpenseDetails)
+                    }
+                    NavScreen.NotificationView -> NotificationViewScreen(
+                        onBackClick = { NavigationState.navigateBack() }
+                    )
+                    NavScreen.Transaction -> TransactionsScreen()
+                    NavScreen.Budget -> BudgetScreen()
+                    NavScreen.Profile -> ProfileScreen()
+                    NavScreen.Expense -> ExpenseScreen { NavigationState.navigateBack() }
+                    NavScreen.Income -> IncomeScreen { NavigationState.navigateBack() }
+                    NavScreen.Transfer -> TransferScreen { NavigationState.navigateBack() }
+//                     NavScreen.ManagePayee -> PayeeScreen(
+//                         payees = payees,
+// //                        onBackPress = { NavigationState.navigateBack()},
+//                         onAddPayeeClick = { NavigationState.navigateTo(NavScreen.AddNewPayee) },
+//                         onEditPayeeClick = { /* TODO: Implement edit payee functionality */ },
+//                         onDeletePayeeClick = { payee -> payees.remove(payee) },
+//                         onEmailClick = { /* TODO: Implement email functionality */ },
+//                         onWhatsAppClick = { /* TODO: Implement WhatsApp functionality */ },
+//                         onSmsClick = { /* TODO: Implement SMS functionality */ }
+//                     )
+//                     NavScreen.AddNewPayee -> AddNewPayeeScreen(
+//                         onPayeeAdded = { newPayee ->
+//                             payees.add(newPayee)
+//                             NavigationState.navigateTo(NavScreen.ManagePayee)
+//                         }
+//                     )
+
+                    NavScreen.ManagePayee -> PayeeScreen(
+                        payees = payees,
+                        onAddPayeeClick = { NavigationState.navigateTo(NavScreen.AddNewPayee) },
+                        onEditPayeeClick = { payee ->
+//                            NavigationState.payeeToEdit = payee // Add this to NavigationState
+                            NavigationState.navigateTo(NavScreen.AddNewPayee)
+                        },
+                        onDeletePayeeClick = { payee -> payees.remove(payee) },
+                        onBackPress = { NavigationState.navigateBack()}
+                    )
+// NavScreen.AddNewPayee -> AddNewPayeeScreen(
+// //    payeeToEdit = NavigationState.payeeToEdit, // Add this parameter
+//     onPayeeAdded = { newPayee ->
+//         if (NavigationState.payeeToEdit != null) {
+//             // Update existing payee
+//             payees.remove(NavigationState.payeeToEdit)
+//             payees.add(newPayee)
+//             NavigationState.payeeToEdit = null
+//         } else {
+//             // Add new payee
+//             payees.add(newPayee)
+//         }
+//         NavigationState.navigateTo(NavScreen.ManagePayee)
+//     }
+// )
+NavScreen.AddNewPayee -> AddNewPayeeScreen(
+    onPayeeAdded = { newPayee ->
+        payees.add(newPayee)
+        NavigationState.navigateTo(NavScreen.ManagePayee)
+    }
+)
+
+                    NavScreen.ExpenseDetails -> ExpenseDetailScreen(
+                        expenseTitle = NavigationState.currentExpenseId ?: "",
+                        onBackPress = { NavigationState.navigateBack() },
+                        onEditPress = { /* Handle edit action */ },
+                        onDeletePress = { /* Handle delete action */ }
+                    )
+                    NavScreen.Settings -> SettingsScreen { NavigationState.navigateBack() }
+                    NavScreen.Theme -> ThemeScreen(
+                        onBackPress = { NavigationState.navigateBack() },
+                        themePreference = themePreference
+                    )
+                    NavScreen.Currency -> CurrencyScreen(
+                        onBackPress = { NavigationState.navigateBack() }
+                    )
+                    NavScreen.Language -> LanguageScreen(
+                        onBackPress = { NavigationState.navigateBack() },
+                        onLanguageSelected = { /* TODO */ }
+                    )
+                    NavScreen.Notifications -> NotificationScreen(
+                        onBackPress = { NavigationState.navigateBack() }
+                    )
+                    NavScreen.Security -> SecurityScreen(
+                        onBackPress = { NavigationState.navigateBack() },
+                        onSecurityMethodSelected = { /* TODO */ }
+                    )
+                    else -> HomeScreen { expenseId ->
+                        NavigationState.currentExpenseId = expenseId
+                        NavigationState.navigateTo(NavScreen.ExpenseDetails)
+                    }
+                }
+            }
+
+            if (NavigationState.currentScreen in listOf(
+                    NavScreen.Home,
+                    NavScreen.Transaction,
+                    NavScreen.Budget,
+                    NavScreen.Profile
+                )
+            ) {
+                BottomNavigationBar()
+            }
         }
     }
 }
-}
+

@@ -14,7 +14,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -26,7 +25,7 @@ data class Payee(
     val name: String,
     val mobile: String,
     val email: String,
-    val profilePic: Int = R.drawable.ic_profile // Default profile icon
+    val profilePic: String?
 )
 
 @Composable
@@ -36,9 +35,23 @@ fun PayeeListScreen(
 ) {
     // Sample payee list - Replace with your actual data
     val payees = listOf(
-        Payee(1, "John Doe", "+1 234 567 8900", "john.doe@email.com"),
-        Payee(2, "Jane Smith", "+1 234 567 8901", "jane.smith@email.com"),
-        Payee(3, "Mike Johnson", "+1 234 567 8902", "mike.j@email.com"),
+        Payee(
+            1,
+            "John Doe",
+            "+1 234 567 8900",
+            "john.doe@email.com",
+            profilePic = "https://www.press-seal.com/wp-content/uploads/2016/10/img-team-GENERIC-500x500.jpg",
+
+
+            ),
+        Payee(
+            2, "Jane Smith", "+1 234 567 8901", "jane.smith@email.com",
+            profilePic = "https://www.press-seal.com/wp-content/uploads/2016/10/img-team-GENERIC-500x500.jpg",
+        ),
+        Payee(
+            3, "Mike Johnson", "+1 234 567 8902", "mike.j@email.com",
+            profilePic = "https://www.press-seal.com/wp-content/uploads/2016/10/img-team-GENERIC-500x500.jpg",
+        ),
         // Add more payees as needed
     )
 
@@ -110,6 +123,7 @@ fun PayeeListScreen(
         ) {
             items(payees) { payee ->
                 PayeeItem(
+
                     payee = payee,
                     onSelect = { onPayeeSelected(payee) }
                 )
@@ -145,7 +159,7 @@ private fun PayeeItem(
             color = MaterialTheme.colorScheme.primaryContainer
         ) {
             Icon(
-                painter = painterResource(id = payee.profilePic),
+                painter = painterResource(id = payee.id),
                 contentDescription = null,
                 modifier = Modifier
                     .padding(8.dp)

@@ -5,6 +5,7 @@ import android.app.Activity
 import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -65,7 +66,6 @@ fun AttachmentOptionsScreen(
     ) { isSuccess ->
         if (isSuccess && tempImageUri != null) {
             onImagesSelected(listOf(tempImageUri!!))
-            onDismiss()
         }
     }
 
@@ -73,21 +73,10 @@ fun AttachmentOptionsScreen(
         contract = ActivityResultContracts.RequestPermission()
     ) { isGranted ->
         if (isGranted) {
-            val contentValues = ContentValues().apply {
-                put(MediaStore.Images.Media.DISPLAY_NAME, "img_${System.currentTimeMillis()}.jpg")
-                put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
-            }
-            
-            tempImageUri = context.contentResolver.insert(
-                MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-                contentValues
-            )
-            
+            tempImageUri = createImageUri(context)
             tempImageUri?.let { uri ->
                 takePictureLauncher.launch(uri)
             }
-        } else {
-            Toast.makeText(context, "Camera permission required", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -146,14 +135,24 @@ fun AttachmentOptionsScreen(
                     icon = R.drawable.ic_camera,
                     label = "Camera",
                     onClick = {
-                        permissionLauncher.launch(Manifest.permission.CAMERA)
+                        when (PackageManager.PERMISSION_GRANTED) {
+                            context.checkSelfPermission(Manifest.permission.CAMERA) -> {
+                                tempImageUri = createImageUri(context)
+                                tempImageUri?.let { uri ->
+                                    takePictureLauncher.launch(uri)
+                                }
+                            }
+                            else -> {
+                                permissionLauncher.launch(Manifest.permission.CAMERA)
+                            }
+                        }
                     }
                 )
                 AttachmentOption(
                     icon = R.drawable.ic_gallery,
                     label = "Image",
                     onClick = {
-                        galleryLauncher.launch("image/*")
+                        galleryLauncher.launch("image/")
                     }
                 )
                 AttachmentOption(
@@ -167,7 +166,14 @@ fun AttachmentOptionsScreen(
         }
     }
 }
-private fun createImageFile(context: Context): Uri? {
+
+private fun createImageUri(context: Context): Uri? {
+    val contentValues = ContentValues().apply {
+        put(MediaStore.Images.Media.DISPLAY_NAME, "temp_image_${System.currentTimeMillis()}.jpg")
+        put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
+    }
+    return context.contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
+}private fun createImageFile(context: Context): Uri? {
     val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
     val imageFileName = "JPEG_${timeStamp}_"
     val storageDir = context.getExternalFilesDir(null)
