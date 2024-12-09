@@ -3,6 +3,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -38,9 +40,10 @@ fun ProfileScreen() {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(16.dp)
+                 .verticalScroll(rememberScrollState())
         ) {
             ProfileHeader()
-            Spacer(modifier = Modifier.height(48.dp))
+            Spacer(modifier = Modifier.height(40.dp))
             ProfileMenu(showLogoutDialog = showLogoutDialog)
         }
     }
@@ -88,7 +91,7 @@ fun ProfileHeader() {
                 contentScale = ContentScale.Crop
             )
         }
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(20.dp))
 
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -118,12 +121,12 @@ fun ProfileMenu(showLogoutDialog: MutableState<Boolean>) {
             backgroundColor = Color(0xFFF3F0FF)
         )
          ProfileMenuItem(
-            icon = R.drawable.ic_wallet,
+            icon = R.drawable.ic_lends,
             title = "You Owed",
             backgroundColor = Color(0xFFF3F0FF)
         )
         ProfileMenuItem(
-            icon = R.drawable.ic_settings,
+            icon = R.drawable.ic_manage_payee,
             title = "Manage Payee",
             backgroundColor = Color(0xFFF3F0FF),
             onClick = { NavigationState.navigateTo(NavScreen.ManagePayee) }
@@ -159,6 +162,7 @@ fun ProfileMenuItem(
     Card(
         modifier = Modifier
             .fillMaxWidth()
+            //  .padding(vertical = 4.dp)
             .shadow(
                 elevation = 2.dp,
                 shape = RoundedCornerShape(12.dp),
@@ -173,27 +177,27 @@ fun ProfileMenuItem(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
                 modifier = Modifier
-                    .size(40.dp)
+                    .size(38.dp)
                     .background(backgroundColor, CircleShape)
             ) {
                 Icon(
                     painter = painterResource(id = icon),
                     contentDescription = null,
                     modifier = Modifier
-                        .size(24.dp)
+                        .size(22.dp)
                         .align(Alignment.Center),
                     tint = Color.Unspecified
                 )
             }
-            Spacer(modifier = Modifier.width(16.dp))
+            Spacer(modifier = Modifier.width(14.dp))
             Text(
                 text = title,
-                fontSize = 18.sp,
+                fontSize = 16.sp,
                 color = MaterialTheme.colorScheme.onSurface
             )
         }

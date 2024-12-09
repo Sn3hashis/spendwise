@@ -39,17 +39,19 @@ import androidx.compose.ui.res.painterResource
 import coil.compose.rememberAsyncImagePainter
 import me.sm.spendwise.ui.screens.AttachmentOptionsScreen
 import me.sm.spendwise.R
+import me.sm.spendwise.data.NotificationManager
+import me.sm.spendwise.navigation.NavigationState.payeeToEdit
 
 @SuppressLint("Range")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddNewPayeeScreen(onPayeeAdded: (Payee) -> Unit) {
-    var name by remember { mutableStateOf("") }
-    var phone by remember { mutableStateOf("") }
-    var email by remember { mutableStateOf("") }
+fun AddNewPayeeScreen(onPayeeAdded: (Payee) -> Unit, payeeToEdit: Payee? = null,  ) {
+    var name by remember(payeeToEdit) { mutableStateOf(payeeToEdit?.name ?: "") }
+    var phone by remember(payeeToEdit) { mutableStateOf(payeeToEdit?.mobile ?: "") }
+    var email by remember(payeeToEdit) { mutableStateOf(payeeToEdit?.email ?: "") }
+    var profilePicUri by remember(payeeToEdit) { mutableStateOf(payeeToEdit?.profilePic) }
     var isNameError by remember { mutableStateOf(false) }
     var isPhoneError by remember { mutableStateOf(false) }
-    var profilePicUri by remember { mutableStateOf<String?>(null) }
     var showAttachmentOptions by remember { mutableStateOf(false) }
 
     val context = LocalContext.current
@@ -155,7 +157,7 @@ fun AddNewPayeeScreen(onPayeeAdded: (Payee) -> Unit) {
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text = "Add New Payee",
+                               text = if (payeeToEdit != null) "Update ${payeeToEdit!!.name}" else "Add New Payee",
                                 textAlign = TextAlign.Center,
                                 fontWeight = FontWeight.Bold
                             )
@@ -297,7 +299,6 @@ fun AddNewPayeeScreen(onPayeeAdded: (Payee) -> Unit) {
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
-
                 Button(
                     onClick = {
                         if (name.isNotEmpty() && phone.isNotEmpty()) {
@@ -309,6 +310,17 @@ fun AddNewPayeeScreen(onPayeeAdded: (Payee) -> Unit) {
                                 profilePic = profilePicUri,
                             )
                             onPayeeAdded(newPayee)
+                            
+                            // Add Toast
+                            Toast.makeText(context, "$name added successfully", Toast.LENGTH_SHORT).show()
+                            
+                            // Add Notification
+                            NotificationManager.addTransactionNotification(
+                                type = "New Payee Added",
+                                amount = "",
+                                category = "$name Added in the payee list"
+                            )
+                            
                             NavigationState.navigateTo(NavScreen.ManagePayee)
                         } else {
                             isNameError = name.isEmpty()

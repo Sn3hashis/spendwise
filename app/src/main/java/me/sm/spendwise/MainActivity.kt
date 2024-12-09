@@ -182,34 +182,27 @@ class MainActivity : ComponentActivity() {
 //                         }
 //                     )
 
-                    NavScreen.ManagePayee -> PayeeScreen(
-                        payees = payees,
-                        onAddPayeeClick = { NavigationState.navigateTo(NavScreen.AddNewPayee) },
-                        onEditPayeeClick = { payee ->
-//                            NavigationState.payeeToEdit = payee // Add this to NavigationState
-                            NavigationState.navigateTo(NavScreen.AddNewPayee)
-                        },
-                        onDeletePayeeClick = { payee -> payees.remove(payee) },
-                        onBackPress = { NavigationState.navigateBack()}
-                    )
-// NavScreen.AddNewPayee -> AddNewPayeeScreen(
-// //    payeeToEdit = NavigationState.payeeToEdit, // Add this parameter
-//     onPayeeAdded = { newPayee ->
-//         if (NavigationState.payeeToEdit != null) {
-//             // Update existing payee
-//             payees.remove(NavigationState.payeeToEdit)
-//             payees.add(newPayee)
-//             NavigationState.payeeToEdit = null
-//         } else {
-//             // Add new payee
-//             payees.add(newPayee)
-//         }
-//         NavigationState.navigateTo(NavScreen.ManagePayee)
-//     }
-// )
-NavScreen.AddNewPayee -> AddNewPayeeScreen(
+
+                        NavScreen.ManagePayee -> PayeeScreen(
+                            payees = payees,
+                            onAddPayeeClick = { NavigationState.navigateTo(NavScreen.AddNewPayee) },
+                            onEditPayeeClick = { payee ->
+                                NavigationState.payeeToEdit = payee // Store payee before navigation
+                                NavigationState.navigateTo(NavScreen.AddNewPayee)
+                            },
+                            onDeletePayeeClick = { payee -> payees.remove(payee) },
+                            onBackPress = { NavigationState.navigateBack() }
+                        )
+                       NavScreen.AddNewPayee -> AddNewPayeeScreen(
+    payeeToEdit = NavigationState.payeeToEdit,  // Pass the payee
     onPayeeAdded = { newPayee ->
-        payees.add(newPayee)
+        if (NavigationState.payeeToEdit != null) {
+            payees.remove(NavigationState.payeeToEdit)
+            payees.add(newPayee)
+            NavigationState.payeeToEdit = null
+        } else {
+            payees.add(newPayee)
+        }
         NavigationState.navigateTo(NavScreen.ManagePayee)
     }
 )

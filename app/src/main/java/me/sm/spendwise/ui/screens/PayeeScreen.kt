@@ -29,6 +29,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Divider
 import androidx.compose.ui.res.painterResource
 import me.sm.spendwise.R
+import me.sm.spendwise.navigation.Screen as NavScreen
+
+import android.widget.Toast
+import androidx.compose.ui.platform.LocalContext
+import me.sm.spendwise.data.NotificationManager
+
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -40,6 +46,9 @@ fun PayeeScreen(
     onEditPayeeClick: (Payee) -> Unit,
     onDeletePayeeClick: (Payee) -> Unit
 ) {
+    var showDeleteDialog by remember { mutableStateOf<Payee?>(null) }
+    val context = LocalContext.current
+
     Scaffold(
         topBar = {
             Column {
@@ -98,7 +107,7 @@ fun PayeeScreen(
                     PayeeCard(
                         payee = payee,
                         onEditClick = { onEditPayeeClick(payee) },
-                        onDeleteClick = { onDeletePayeeClick(payee) },
+                        onDeleteClick = { showDeleteDialog = payee },
                         onEmailClick = {  },
                         onWhatsAppClick = {  },
                         onSmsClick = {  },
@@ -108,8 +117,36 @@ fun PayeeScreen(
             }
         }
     }
-}
-@Composable
+
+    showDeleteDialog?.let { payee ->
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = null },
+            title = { Text("Delete Payee") },
+            text = { Text("Are you sure you want to delete ${payee.name}?") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        onDeletePayeeClick(payee)
+                        Toast.makeText(context, "${payee.name} deleted successfully", Toast.LENGTH_SHORT).show()
+                        NotificationManager.addTransactionNotification(
+                            type = "Payee Deleted",
+                            amount = "",
+                            category = "${payee.name} deleted from payee list"
+                        )
+                        showDeleteDialog = null
+                    }
+                ) {
+                    Text("Yes")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = null }) {
+                    Text("No")
+                }
+            }
+        )
+    }
+}@Composable
 fun PayeeCard(
     payee: Payee,
     onEditClick: () -> Unit,
@@ -139,7 +176,7 @@ fun PayeeCard(
                     .clip(MaterialTheme.shapes.medium),
                 contentScale = ContentScale.Crop
             )
-            
+
             Spacer(modifier = Modifier.height(8.dp))
             Text(payee.name, fontWeight = FontWeight.Bold)
             Text(payee.mobile)
@@ -183,19 +220,25 @@ fun PayeeCard(
                 }
             }
 
-            // Updated Edit and Delete buttons row
+            Divider(
+                modifier = Modifier
+                    .padding(vertical = 8.dp)
+                    .fillMaxWidth()
+            )
+            // Edit and Delete buttons row
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
+                horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                // Edit Button
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     IconButton(
                         onClick = onEditClick,
                         modifier = Modifier
-                            .size(48.dp)
+                            .size(40.dp)  // Reduced size
                             .background(
                                 color = MaterialTheme.colorScheme.primary,
                                 shape = RoundedCornerShape(8.dp)
@@ -204,7 +247,8 @@ fun PayeeCard(
                         Icon(
                             Icons.Default.Edit,
                             contentDescription = "Edit",
-                            tint = Color.White
+                            tint = Color.White,
+                            modifier = Modifier.size(20.dp)  // Smaller icon
                         )
                     }
                     Text(
@@ -215,13 +259,14 @@ fun PayeeCard(
                     )
                 }
 
+                // Delete Button
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     IconButton(
                         onClick = onDeleteClick,
                         modifier = Modifier
-                            .size(48.dp)
+                            .size(40.dp)  // Reduced size
                             .background(
                                 color = Color.Red,
                                 shape = RoundedCornerShape(8.dp)
@@ -230,7 +275,8 @@ fun PayeeCard(
                         Icon(
                             Icons.Default.Delete,
                             contentDescription = "Delete",
-                            tint = Color.White
+                            tint = Color.White,
+                            modifier = Modifier.size(20.dp)  // Smaller icon
                         )
                     }
                     Text(
