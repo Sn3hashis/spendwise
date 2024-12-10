@@ -23,8 +23,9 @@ import me.sm.spendwise.data.CurrencyState
 import me.sm.spendwise.data.NotificationManager
 import me.sm.spendwise.data.TransactionManager
 import me.sm.spendwise.navigation.NavigationState
-import me.sm.spendwise.ui.screens.TransactionItem
+
 import me.sm.spendwise.navigation.Screen as NavScreen
+import me.sm.spendwise.ui.components.TransactionItem
 
 @Composable
 fun HomeScreen(onNavigateToExpenseDetail: (String) -> Unit) {
@@ -317,74 +318,73 @@ private fun RecentTransactions(onTransactionClick: (String) -> Unit) {
         } else {
             recentTransactions.forEach { transaction ->
                 TransactionItem(
-                    icon = transaction.icon,
-                    title = transaction.title,
-                    subtitle = transaction.category,
-                    amount = transaction.amount,
-                    time = transaction.time,
-                    onClick = { onTransactionClick(transaction.id) }
+                   icon = transaction.icon,
+        title = transaction.title,
+        subtitle = transaction.category,
+        amount = transaction.amount,
+        time = transaction.time,
+        isIncome = transaction.isIncome,
+        type = transaction.type,
+        onClick = { onTransactionClick(transaction.id)  }
                 )
             }
         }
     }
 }
 
-@Composable
-private fun TransactionItem(
-    icon: Int,
-    title: String,
-    subtitle: String,
-    amount: String,
-    time: String,
-    onClick: () -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp)
-            .clickable(onClick = onClick),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Surface(
-                shape = RoundedCornerShape(16.dp),
-                color = MaterialTheme.colorScheme.surfaceVariant,
-                modifier = Modifier.size(48.dp)
-            ) {
-                Icon(
-                    painter = painterResource(id = icon),
-                    contentDescription = title,
-                    modifier = Modifier.padding(12.dp),
-                    tint = MaterialTheme.colorScheme.primary
-                )
-            }
-            Column(modifier = Modifier.padding(start = 12.dp)) {
-                Text(
-                    text = title,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Medium
-                )
-                Text(
-                    text = subtitle,
-                    fontSize = 13.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
-        Column(horizontalAlignment = Alignment.End) {
-            Text(
-                text = amount,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Medium,
-                color = MaterialTheme.colorScheme.error
-            )
-            Text(
-                text = time,
-                fontSize = 13.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-    }
-}
-
+//@Composable
+//private fun TransactionItem(
+//    icon: Int,
+//    title: String,
+//    subtitle: String,
+//    amount: String,
+//    time: String,
+//    isIncome: Boolean,
+//    type: String,
+//    onClick: () -> Unit
+//) {
+//    Row(
+//        modifier = Modifier
+//            .fillMaxWidth()
+//            .clickable(onClick = onClick),
+//        horizontalArrangement = Arrangement.SpaceBetween,
+//        verticalAlignment = Alignment.CenterVertically
+//    ) {
+//        // Left side with icon and details
+//        Row(verticalAlignment = Alignment.CenterVertically) {
+//            Icon(
+//                painter = painterResource(id = icon),
+//                contentDescription = null,
+//                tint = Color.Unspecified
+//            )
+//            Column(modifier = Modifier.padding(start = 12.dp)) {
+//                Text(
+//                    text = title,
+//                    fontSize = 16.sp,
+//                    fontWeight = FontWeight.Medium
+//                )
+//                Text(
+//                    text = subtitle,
+//                    fontSize = 13.sp,
+//                    color = MaterialTheme.colorScheme.onSurfaceVariant
+//                )
+//            }
+//        }
+//
+//        // Amount with color and prefix
+//        Text(
+//            text = when (type) {
+//                "Income" -> "+$amount"
+//                "Expense" -> "-$amount"
+//                else -> "-$amount"
+//            },
+//            color = when (type) {
+//                "Income" -> Color(0xFF00A86B)
+//                "Expense" -> Color.Red
+//                else -> Color(0xFF2196F3)
+//            },
+//            fontWeight = FontWeight.Bold
+//        )
+//    }
+//}
+//

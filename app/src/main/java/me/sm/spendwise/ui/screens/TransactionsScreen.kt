@@ -26,6 +26,8 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.material3.SheetState
 import me.sm.spendwise.data.TransactionManager
+import me.sm.spendwise.ui.components.TransactionItem
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -176,6 +178,65 @@ private fun FinancialReportCard() {
     }
 }
 
+
+//@Composable
+//private fun TransactionItem(
+//    icon: Int,
+//    title: String,
+//    subtitle: String,
+//    amount: String,
+//    time: String,
+//    backgroundColor: Color,
+//    isIncome: Boolean = false
+//) {
+//    Row(
+//        modifier = Modifier
+//            .fillMaxWidth()
+//            .padding(vertical = 8.dp),
+//        horizontalArrangement = Arrangement.SpaceBetween,
+//        verticalAlignment = Alignment.CenterVertically
+//    ) {
+//        Row(verticalAlignment = Alignment.CenterVertically) {
+//            Surface(
+//                shape = RoundedCornerShape(16.dp),
+//                color = backgroundColor,
+//                modifier = Modifier.size(48.dp)
+//            ) {
+//                Icon(
+//                    painter = painterResource(id = icon),
+//                    contentDescription = title,
+//                    modifier = Modifier.padding(12.dp),
+//                    tint = MaterialTheme.colorScheme.primary
+//                )
+//            }
+//            Column(modifier = Modifier.padding(start = 12.dp)) {
+//                Text(
+//                    text = title,
+//                    fontSize = 16.sp,
+//                    fontWeight = FontWeight.Medium
+//                )
+//                Text(
+//                    text = subtitle,
+//                    fontSize = 13.sp,
+//                    color = MaterialTheme.colorScheme.onSurfaceVariant
+//                )
+//            }
+//        }
+//        Column(horizontalAlignment = Alignment.End) {
+//            Text(
+//                text = amount,
+//                fontSize = 16.sp,
+//                fontWeight = FontWeight.Medium,
+//                color = if (isIncome) Color(0xFF00A86B) else MaterialTheme.colorScheme.error
+//            )
+//            Text(
+//                text = time,
+//                fontSize = 13.sp,
+//                color = MaterialTheme.colorScheme.onSurfaceVariant
+//            )
+//        }
+//    }
+//}
 @Composable
 private fun TransactionsList() {
     val transactions = TransactionManager.transactions
@@ -209,15 +270,16 @@ private fun TransactionsList() {
                     )
                     
                     transactionsForDate.forEach { transaction ->
-                        TransactionItem(
-                            icon = transaction.icon,
-                            title = transaction.title,
-                            subtitle = transaction.category,
-                            amount = transaction.amount,
-                            time = transaction.time,
-                            backgroundColor = transaction.backgroundColor,
-                            isIncome = transaction.isIncome
-                        )
+                       TransactionItem(
+        icon = transaction.icon,
+        title = transaction.title,
+        subtitle = transaction.category,
+        amount = transaction.amount,
+        time = transaction.time,
+        isIncome = transaction.isIncome,
+        type = transaction.type,
+        onClick = { /* Handle click if needed */ }
+    )
                     }
                 }
             }
@@ -225,61 +287,3 @@ private fun TransactionsList() {
     }
 }
 
-@Composable
-private fun TransactionItem(
-    icon: Int,
-    title: String,
-    subtitle: String,
-    amount: String,
-    time: String,
-    backgroundColor: Color,
-    isIncome: Boolean = false
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Surface(
-                shape = RoundedCornerShape(16.dp),
-                color = backgroundColor,
-                modifier = Modifier.size(48.dp)
-            ) {
-                Icon(
-                    painter = painterResource(id = icon),
-                    contentDescription = title,
-                    modifier = Modifier.padding(12.dp),
-                    tint = MaterialTheme.colorScheme.primary
-                )
-            }
-            Column(modifier = Modifier.padding(start = 12.dp)) {
-                Text(
-                    text = title,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Medium
-                )
-                Text(
-                    text = subtitle,
-                    fontSize = 13.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
-        Column(horizontalAlignment = Alignment.End) {
-            Text(
-                text = amount,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Medium,
-                color = if (isIncome) Color(0xFF00A86B) else MaterialTheme.colorScheme.error
-            )
-            Text(
-                text = time,
-                fontSize = 13.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-    }
-} 

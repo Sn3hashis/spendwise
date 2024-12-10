@@ -19,11 +19,25 @@ fun getCategoryIcon(category: String): Int {
         "food" -> R.drawable.ic_food
         "shopping" -> R.drawable.ic_shopping
         "transport" -> R.drawable.ic_transport
-        // Add more categories as needed
+        "salary" -> R.drawable.ic_income_new
+        "transfer" -> R.drawable.ic_transfer_new
+        "Health" -> R.drawable.ic_health
+        "Entertainment" -> R.drawable.ic_entertainment
+        "Miscellaneous" -> R.drawable.ic_others
+        "Financial" -> R.drawable.ic_finance
+        "Education" -> R.drawable.ic_education
+        "Family" -> R.drawable.ic_family
+        "Travel" -> R.drawable.ic_travel
+        "Business" -> R.drawable.ic_business
+        "Investment" -> R.drawable.ic_investment
+       "other_income" -> R.drawable.ic_other_income
+       "Bonuses" -> R.drawable.ic_bonus
+       "Loans" -> R.drawable.ic_loan
+
+        // Add all your category icons here
         else -> R.drawable.ic_misc
     }
 }
-
 fun getCategoryColor(category: String): Color {
     return when (category.lowercase()) {
         "food" -> Color(0xFFFF6B6B)

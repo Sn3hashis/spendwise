@@ -393,12 +393,12 @@ fun ExpenseScreen(
 TransactionManager.addTransaction(
     Transaction(
         type = "Expense",
-        title = description,  // Use description instead of title
+        title = description,
         category = selectedCategory?.name ?: "General",
         amount = "${CurrencyState.currentCurrency}$amount",
         time = getCurrentTime(),
         date = getCurrentDate(),
-        icon = getCategoryIcon(selectedCategory?.name ?: "General"),
+        icon = selectedCategory?.icon ?: R.drawable.ic_misc,  // Use category's icon
         backgroundColor = getCategoryColor(selectedCategory?.name ?: "General"),
         isIncome = false
     )
