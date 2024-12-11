@@ -128,8 +128,8 @@ class MainActivity : ComponentActivity() {
                             var needsVerification by remember { mutableStateOf(true) }
 
                             LaunchedEffect(Unit) {
-                                securityPreference.securityMethodFlow.collect { method ->
-                                    if (method != SecurityMethod.NONE) {
+                                securityPreference.getSecurityMethodFlow().collect { method ->
+                                    if (method != null && method != SecurityMethod.NONE) {
                                         needsVerification = true
                                     }
                                 }
