@@ -32,8 +32,24 @@ class GoogleAuthUiClient(
     }
 
     suspend fun signInWithIntent(intent: Intent): SignInResult {
-        val credential = oneTapClient.getSignInCredentialFromIntent(intent)
+        val credential = try {
+            oneTapClient.getSignInCredentialFromIntent(intent)
+        } catch(e: Exception) {
+            e.printStackTrace()
+            return SignInResult(
+                data = null,
+                errorMessage = e.message
+            )
+        }
+        
         val googleIdToken = credential.googleIdToken
+        if(googleIdToken == null) {
+            return SignInResult(
+                data = null,
+                errorMessage = "No ID token found"
+            )
+        }
+        
         val googleCredentials = GoogleAuthProvider.getCredential(googleIdToken, null)
         return try {
             val user = auth.signInWithCredential(googleCredentials).await().user

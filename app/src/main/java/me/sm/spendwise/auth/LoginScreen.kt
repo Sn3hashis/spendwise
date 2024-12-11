@@ -76,21 +76,36 @@ fun LoginScreen(
         onResult = { result ->
             if(result.resultCode == Activity.RESULT_OK) {
                 scope.launch {
-                    val signInResult = googleAuthUiClient.signInWithIntent(
-                        intent = result.data ?: return@launch
-                    )
-                    if (signInResult.data != null) {
-                        AppState.currentUser = auth.currentUser
-                        AppState.currentScreen = Screen.Main
-                        onLoginSuccess()
-                    } else {
+                    try {
+                        val signInResult = googleAuthUiClient.signInWithIntent(
+                            intent = result.data ?: return@launch
+                        )
+                        if (signInResult.data != null) {
+                            AppState.currentUser = auth.currentUser
+                            AppState.currentScreen = Screen.Main
+                            onLoginSuccess()
+                        } else {
+                            Toast.makeText(
+                                context,
+                                signInResult.errorMessage ?: "Sign in failed",
+                                Toast.LENGTH_LONG
+                            ).show()
+                        }
+                    } catch (e: Exception) {
+                        e.printStackTrace()
                         Toast.makeText(
                             context,
-                            signInResult.errorMessage ?: "Sign in failed",
+                            "Sign in error: ${e.message}",
                             Toast.LENGTH_LONG
                         ).show()
                     }
                 }
+            } else {
+                Toast.makeText(
+                    context,
+                    "Sign in cancelled",
+                    Toast.LENGTH_LONG
+                ).show()
             }
         }
     )
@@ -240,12 +255,27 @@ fun LoginScreen(
         Button(
             onClick = {
                 scope.launch {
-                    val signInIntentSender = googleAuthUiClient.signIn()
-                    launcher.launch(
-                        IntentSenderRequest.Builder(
-                            signInIntentSender ?: return@launch
-                        ).build()
-                    )
+                    try {
+                        val signInIntentSender = googleAuthUiClient.signIn()
+                        if (signInIntentSender == null) {
+                            Toast.makeText(
+                                context,
+                                "Couldn't get sign in intent",
+                                Toast.LENGTH_LONG
+                            ).show()
+                            return@launch
+                        }
+                        launcher.launch(
+                            IntentSenderRequest.Builder(signInIntentSender).build()
+                        )
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                        Toast.makeText(
+                            context,
+                            "Sign in error: ${e.message}",
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
                 }
             },
             modifier = Modifier
@@ -332,7 +362,7 @@ fun GoogleSignInButton(
 
 private fun getGoogleSignInClient(context: Context): GoogleSignInClient {
     val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-        .requestIdToken("228590481963-e5c992072d1f465189f06e.apps.googleusercontent.com") // Use your web client ID from google-services.json
+        .requestIdToken(context.getString(R.string.web_client_id))
         .requestEmail()
         .build()
     return GoogleSignIn.getClient(context, gso)
