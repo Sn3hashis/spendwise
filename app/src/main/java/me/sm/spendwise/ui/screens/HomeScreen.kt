@@ -26,6 +26,7 @@ import me.sm.spendwise.navigation.NavigationState
 
 import me.sm.spendwise.navigation.Screen as NavScreen
 import me.sm.spendwise.ui.components.TransactionItem
+import me.sm.spendwise.ui.AppState
 
 @Composable
 fun HomeScreen(onNavigateToExpenseDetail: (String) -> Unit) {
@@ -68,13 +69,14 @@ private fun TopBar() {
         verticalAlignment = Alignment.CenterVertically
     ) {
         // Profile Image
-        Image(
-            painter = painterResource(id = R.drawable.profile_placeholder),
+        AsyncImage(
+            model = AppState.currentUser?.photoUrl ?: R.drawable.profile_placeholder,
             contentDescription = "Profile",
             modifier = Modifier
                 .size(48.dp)
                 .clip(CircleShape)
-                .border(2.dp, MaterialTheme.colorScheme.primary, CircleShape)
+                .border(2.dp, MaterialTheme.colorScheme.primary, CircleShape),
+            contentScale = ContentScale.Crop
         )
 
         // Month Selector

@@ -23,6 +23,19 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.res.painterResource
 import me.sm.spendwise.R
+import android.app.Activity
+import android.content.Context
+import androidx.compose.ui.platform.LocalContext
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInClient
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.GoogleAuthProvider
+import com.google.android.gms.common.api.ApiException
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import me.sm.spendwise.ui.AppState
+import me.sm.spendwise.data.SecurityPreference
 
 @Composable
 fun LoginScreen(
@@ -34,6 +47,39 @@ fun LoginScreen(
     var password by remember { mutableStateOf("") }
     var isPasswordVisible by remember { mutableStateOf(false) }
     
+    val context = LocalContext.current
+    val securityPreference = remember { SecurityPreference(context) }
+    val auth = remember { FirebaseAuth.getInstance() }
+    val googleSignInClient = remember { getGoogleSignInClient(context) }
+    
+    val launcher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
+            try {
+                val account = task.getResult(ApiException::class.java)
+                val credential = GoogleAuthProvider.getCredential(account.idToken, null)
+                auth.signInWithCredential(credential)
+                    .addOnCompleteListener { task ->
+                        if (task.isSuccessful) {
+                            AppState.currentUser = auth.currentUser
+                            // Check if user has security setup
+                            securityPreference.getSecurityMethod().value?.let { method ->
+                                if (method == SecurityMethod.NONE) {
+                                    AppState.currentScreen = Screen.SecuritySetup
+                                } else {
+                                    onLoginSuccess()
+                                }
+                            }
+                        }
+                    }
+            } catch (e: ApiException) {
+                // Handle error
+            }
+        }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -177,7 +223,9 @@ fun LoginScreen(
 
         // Google Sign In button
         OutlinedButton(
-            onClick = { /* Handle Google sign in */ },
+            onClick = { 
+                launcher.launch(googleSignInClient.signInIntent)
+            },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp),
@@ -225,4 +273,12 @@ fun LoginScreen(
             }
         }
     }
+}
+
+private fun getGoogleSignInClient(context: Context): GoogleSignInClient {
+    val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+        .requestIdToken("228590481963-e5c992072d1f465189f06e.apps.googleusercontent.com") // Use your web client ID from google-services.json
+        .requestEmail()
+        .build()
+    return GoogleSignIn.getClient(context, gso)
 } 

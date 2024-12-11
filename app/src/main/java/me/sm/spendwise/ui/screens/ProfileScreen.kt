@@ -82,8 +82,8 @@ fun ProfileHeader() {
                 .background(Color(0xFF8B5CF6))
                 .padding(3.dp)
         ) {
-            Image(
-                painter = painterResource(id = R.drawable.ic_profile_photo),
+            AsyncImage(
+                model = AppState.currentUser?.photoUrl ?: R.drawable.ic_profile_photo,
                 contentDescription = "Profile Picture",
                 modifier = Modifier
                     .fillMaxSize()
@@ -99,12 +99,11 @@ fun ProfileHeader() {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "Snehashis Mukherjee",
+                text = AppState.currentUser?.displayName ?: "User",
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center,
             )
-
         }
     }
 }
