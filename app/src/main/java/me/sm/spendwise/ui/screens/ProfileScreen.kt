@@ -27,6 +27,7 @@ import androidx.compose.runtime.*
 import androidx.compose.material3.AlertDialog
 import androidx.compose.runtime.MutableState
 import androidx.compose.ui.text.style.TextAlign
+import coil.compose.AsyncImage
 import me.sm.spendwise.ui.AppState
 import me.sm.spendwise.navigation.Screen as NavScreen
 @Composable

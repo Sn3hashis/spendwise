@@ -43,6 +43,7 @@ import android.widget.Toast
 import com.google.android.gms.auth.api.identity.Identity
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts.StartIntentSenderForResult
+import androidx.compose.foundation.clickable
 
 @Composable
 fun LoginScreen(
@@ -53,14 +54,14 @@ fun LoginScreen(
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var isPasswordVisible by remember { mutableStateOf(false) }
-    
+
     val context = LocalContext.current
     val securityPreference = remember { SecurityPreference(context) }
     val auth = remember { FirebaseAuth.getInstance() }
     val googleSignInClient = remember { getGoogleSignInClient(context) }
-    
+
     val scope = rememberCoroutineScope()
-    
+
     val googleAuthUiClient by remember {
         mutableStateOf(
             GoogleAuthUiClient(
@@ -69,7 +70,7 @@ fun LoginScreen(
             )
         )
     }
-    
+
     val launcher = rememberLauncherForActivityResult(
         contract = StartIntentSenderForResult(),
         onResult = { result ->
@@ -119,7 +120,7 @@ fun LoginScreen(
                 textAlign = TextAlign.Center,
                 color = MaterialTheme.colorScheme.onBackground
             )
-            
+
             Text(
                 text = "Please sign in to continue",
                 fontSize = 16.sp,
@@ -161,12 +162,12 @@ fun LoginScreen(
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(16.dp),
-            visualTransformation = if (isPasswordVisible) 
+            visualTransformation = if (isPasswordVisible)
                 VisualTransformation.None else PasswordVisualTransformation(),
             trailingIcon = {
                 IconButton(onClick = { isPasswordVisible = !isPasswordVisible }) {
                     Icon(
-                        imageVector = if (isPasswordVisible) 
+                        imageVector = if (isPasswordVisible)
                             Icons.Default.Visibility else Icons.Default.VisibilityOff,
                         contentDescription = "Toggle password visibility",
                         tint = MaterialTheme.colorScheme.outline
@@ -341,4 +342,4 @@ private fun getGoogleSignInClient(context: Context): GoogleSignInClient {
         .requestEmail()
         .build()
     return GoogleSignIn.getClient(context, gso)
-} 
+}
