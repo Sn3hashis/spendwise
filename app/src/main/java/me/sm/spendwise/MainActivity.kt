@@ -99,7 +99,7 @@ class MainActivity : ComponentActivity() {
                         )
                         Screen.Login -> LoginScreen(
                             onLoginSuccess = {
-                                AppState.currentScreen = Screen.SecuritySetup
+                                AppState.currentScreen = Screen.Main
                             },
                             onSignUpClick = { AppState.currentScreen = Screen.SignUp },
                             onForgotPasswordClick = { AppState.currentScreen = Screen.ForgotPassword }

@@ -71,15 +71,20 @@ private fun TopBar() {
         verticalAlignment = Alignment.CenterVertically
     ) {
         // Profile Image
-        AsyncImage(
-            model = AppState.currentUser?.photoUrl ?: R.drawable.profile_placeholder,
-            contentDescription = "Profile",
+        Box(
             modifier = Modifier
                 .size(48.dp)
                 .clip(CircleShape)
-                .border(2.dp, MaterialTheme.colorScheme.primary, CircleShape),
-            contentScale = ContentScale.Crop
-        )
+                .background(MaterialTheme.colorScheme.surface)
+                .clickable { NavigationState.navigateTo(NavScreen.Profile) }
+        ) {
+            AsyncImage(
+                model = AppState.currentUser?.photoUrl ?: R.drawable.profile_placeholder,
+                contentDescription = "Profile",
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop
+            )
+        }
 
         // Month Selector
         Row(

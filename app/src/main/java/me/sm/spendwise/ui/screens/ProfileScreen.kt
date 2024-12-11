@@ -80,32 +80,31 @@ fun ProfileHeader() {
             modifier = Modifier
                 .size(120.dp)
                 .clip(CircleShape)
-                .background(Color(0xFF8B5CF6))
-                .padding(3.dp)
+                .background(MaterialTheme.colorScheme.surface)
         ) {
             AsyncImage(
-                model = AppState.currentUser?.photoUrl ?: R.drawable.ic_profile_photo,
+                model = AppState.currentUser?.photoUrl ?: R.drawable.profile_placeholder,
                 contentDescription = "Profile Picture",
-                modifier = Modifier
-                    .fillMaxSize()
-                    .clip(CircleShape),
+                modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop
             )
         }
+        
         Spacer(modifier = Modifier.height(20.dp))
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = AppState.currentUser?.displayName ?: "User",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center,
-            )
-        }
+        Text(
+            text = AppState.currentUser?.displayName ?: "User",
+            fontSize = 24.sp,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onBackground
+        )
+        
+        Text(
+            text = AppState.currentUser?.email ?: "",
+            fontSize = 16.sp,
+            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
+            modifier = Modifier.padding(top = 4.dp)
+        )
     }
 }
 

@@ -81,13 +81,7 @@ fun LoginScreen(
                     )
                     if (signInResult.data != null) {
                         AppState.currentUser = auth.currentUser
-                        securityPreference.getSecurityMethodFlow().collect { method ->
-                            if (method == null || method == SecurityMethod.NONE) {
-                                AppState.currentScreen = Screen.SecuritySetup
-                            } else {
-                                AppState.currentScreen = Screen.Main
-                            }
-                        }
+                        AppState.currentScreen = Screen.Main
                         onLoginSuccess()
                     } else {
                         Toast.makeText(
