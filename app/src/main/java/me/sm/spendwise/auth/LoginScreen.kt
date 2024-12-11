@@ -113,6 +113,44 @@ fun LoginScreen(
         }
     )
 
+    val googleSignInLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult(),
+        onResult = { result ->
+            if (result.resultCode == Activity.RESULT_OK) {
+                val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
+                try {
+                    val account = task.getResult(ApiException::class.java)
+                    val credential = GoogleAuthProvider.getCredential(account.idToken, null)
+                    scope.launch {
+                        try {
+                            val authResult = auth.signInWithCredential(credential).await()
+                            val user = authResult.user
+                            if (user != null) {
+                                AppState.currentUser = user
+                                AppState.currentScreen = Screen.Main
+                                onLoginSuccess()
+                            }
+                        } catch (e: Exception) {
+                            Log.e(TAG, "Firebase auth failed", e)
+                            Toast.makeText(
+                                context,
+                                "Authentication failed: ${e.message}",
+                                Toast.LENGTH_LONG
+                            ).show()
+                        }
+                    }
+                } catch (e: ApiException) {
+                    Log.e(TAG, "Google sign in failed", e)
+                    Toast.makeText(
+                        context,
+                        "Google sign in failed: ${e.message}",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+            }
+        }
+    )
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -263,11 +301,10 @@ fun LoginScreen(
                         val signInIntentSender = googleAuthUiClient.signIn()
                         if (signInIntentSender == null) {
                             Log.e(TAG, "Sign in intent sender is null")
-                            Toast.makeText(
-                                context,
-                                "Google Sign In not available",
-                                Toast.LENGTH_LONG
-                            ).show()
+                            // Try traditional Google Sign In as fallback
+                            googleSignInClient.signInIntent.also { intent ->
+                                googleSignInLauncher.launch(intent)
+                            }
                             return@launch
                         }
                         launcher.launch(

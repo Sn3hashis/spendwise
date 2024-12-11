@@ -28,17 +28,33 @@ class GoogleAuthUiClient(
                     .setGoogleIdTokenRequestOptions(
                         GoogleIdTokenRequestOptions.builder()
                             .setSupported(true)
-                            .setFilterByAuthorizedAccounts(false)
+                            .setFilterByAuthorizedAccounts(true)
                             .setServerClientId(context.getString(R.string.web_client_id))
                             .build()
                     )
-                    .setAutoSelectEnabled(false)
+                    .setAutoSelectEnabled(true)
                     .build()
             ).await()
         } catch(e: Exception) {
             Log.e(TAG, "Error during beginSignIn", e)
-            if(e is CancellationException) throw e
-            null
+            try {
+                oneTapClient.beginSignIn(
+                    BeginSignInRequest.builder()
+                        .setGoogleIdTokenRequestOptions(
+                            GoogleIdTokenRequestOptions.builder()
+                                .setSupported(true)
+                                .setFilterByAuthorizedAccounts(false)
+                                .setServerClientId(context.getString(R.string.web_client_id))
+                                .build()
+                        )
+                        .setAutoSelectEnabled(false)
+                        .build()
+                ).await()
+            } catch(e2: Exception) {
+                Log.e(TAG, "Error during second beginSignIn attempt", e2)
+                if(e2 is CancellationException) throw e2
+                null
+            }
         }
         return result?.pendingIntent?.intentSender
     }
