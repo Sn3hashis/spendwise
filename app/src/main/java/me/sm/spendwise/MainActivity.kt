@@ -125,13 +125,11 @@ class MainActivity : ComponentActivity() {
                             }
                         )
                         Screen.Main -> {
-                            var needsVerification by remember { mutableStateOf(true) }
+                            var needsVerification by remember { mutableStateOf(false) }
 
                             LaunchedEffect(Unit) {
                                 securityPreference.getSecurityMethodFlow().collect { method ->
-                                    if (method != null && method != SecurityMethod.NONE) {
-                                        needsVerification = true
-                                    }
+                                    needsVerification = method != null && method != SecurityMethod.NONE
                                 }
                             }
 

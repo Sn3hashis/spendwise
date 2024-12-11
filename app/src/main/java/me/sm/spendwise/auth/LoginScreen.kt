@@ -39,6 +39,7 @@ import me.sm.spendwise.data.SecurityPreference
 import me.sm.spendwise.ui.Screen
 import me.sm.spendwise.data.SecurityMethod
 import kotlinx.coroutines.launch
+import android.widget.Toast
 
 @Composable
 fun LoginScreen(
@@ -75,14 +76,15 @@ fun LoginScreen(
                                     if (method == null || method == SecurityMethod.NONE) {
                                         AppState.currentScreen = Screen.SecuritySetup
                                     } else {
-                                        onLoginSuccess()
+                                        AppState.currentScreen = Screen.Main
                                     }
                                 }
                             }
                         }
                     }
             } catch (e: ApiException) {
-                // Handle error
+                // Show error message
+                Toast.makeText(context, "Sign in failed: ${e.message}", Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -229,36 +231,12 @@ fun LoginScreen(
         }
 
         // Google Sign In button
-        OutlinedButton(
+        GoogleSignInButton(
             onClick = { 
                 launcher.launch(googleSignInClient.signInIntent)
             },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp),
-            shape = RoundedCornerShape(16.dp),
-            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)),
-            colors = ButtonDefaults.outlinedButtonColors(
-                contentColor = MaterialTheme.colorScheme.onBackground
-            )
-        ) {
-            Row(
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_google),
-                    contentDescription = "Google icon",
-                    modifier = Modifier.size(24.dp)
-                )
-                Spacer(modifier = Modifier.width(12.dp))
-                Text(
-                    text = "Sign Up with Google",
-                    fontSize = 16.sp,
-                    color = MaterialTheme.colorScheme.onBackground
-                )
-            }
-        }
+            modifier = Modifier.fillMaxWidth()
+        )
 
         Spacer(modifier = Modifier.weight(1f))
 
@@ -278,6 +256,43 @@ fun LoginScreen(
                     fontWeight = FontWeight.SemiBold
                 )
             }
+        }
+    }
+}
+
+@Composable
+fun GoogleSignInButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        modifier = modifier
+            .height(56.dp),
+        shape = RoundedCornerShape(16.dp),
+        color = MaterialTheme.colorScheme.surface,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)),
+        shadowElevation = 1.dp
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable(onClick = onClick)
+                .padding(horizontal = 24.dp),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                painter = painterResource(id = R.drawable.ic_google),
+                contentDescription = "Google icon",
+                modifier = Modifier.size(24.dp),
+                tint = Color.Unspecified
+            )
+            Spacer(modifier = Modifier.width(12.dp))
+            Text(
+                text = "Continue with Google",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface
+            )
         }
     }
 }
