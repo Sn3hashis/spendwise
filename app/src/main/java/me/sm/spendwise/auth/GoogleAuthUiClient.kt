@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentSender
 import android.util.Log
+import android.widget.Toast
 import com.google.android.gms.auth.api.identity.BeginSignInRequest
 import com.google.android.gms.auth.api.identity.BeginSignInRequest.GoogleIdTokenRequestOptions
 import com.google.android.gms.auth.api.identity.SignInClient
@@ -28,33 +29,21 @@ class GoogleAuthUiClient(
                     .setGoogleIdTokenRequestOptions(
                         GoogleIdTokenRequestOptions.builder()
                             .setSupported(true)
-                            .setFilterByAuthorizedAccounts(true)
+                            .setFilterByAuthorizedAccounts(false)
                             .setServerClientId(context.getString(R.string.web_client_id))
                             .build()
                     )
-                    .setAutoSelectEnabled(true)
+                    .setAutoSelectEnabled(false)
                     .build()
             ).await()
         } catch(e: Exception) {
             Log.e(TAG, "Error during beginSignIn", e)
-            try {
-                oneTapClient.beginSignIn(
-                    BeginSignInRequest.builder()
-                        .setGoogleIdTokenRequestOptions(
-                            GoogleIdTokenRequestOptions.builder()
-                                .setSupported(true)
-                                .setFilterByAuthorizedAccounts(false)
-                                .setServerClientId(context.getString(R.string.web_client_id))
-                                .build()
-                        )
-                        .setAutoSelectEnabled(false)
-                        .build()
-                ).await()
-            } catch(e2: Exception) {
-                Log.e(TAG, "Error during second beginSignIn attempt", e2)
-                if(e2 is CancellationException) throw e2
-                null
-            }
+            Toast.makeText(
+                context,
+                "Sign in error: ${e.message}",
+                Toast.LENGTH_LONG
+            ).show()
+            null
         }
         return result?.pendingIntent?.intentSender
     }
@@ -65,6 +54,11 @@ class GoogleAuthUiClient(
             oneTapClient.getSignInCredentialFromIntent(intent)
         } catch(e: Exception) {
             Log.e(TAG, "Error getting credentials", e)
+            Toast.makeText(
+                context,
+                "Credential error: ${e.message}",
+                Toast.LENGTH_LONG
+            ).show()
             return SignInResult(
                 data = null,
                 errorMessage = e.message
@@ -74,6 +68,11 @@ class GoogleAuthUiClient(
         val googleIdToken = credential.googleIdToken
         if(googleIdToken == null) {
             Log.e(TAG, "No ID token found")
+            Toast.makeText(
+                context,
+                "No ID token found",
+                Toast.LENGTH_LONG
+            ).show()
             return SignInResult(
                 data = null,
                 errorMessage = "No ID token found"
@@ -81,10 +80,21 @@ class GoogleAuthUiClient(
         }
         
         Log.d(TAG, "Got ID token, attempting Firebase auth")
+        Toast.makeText(
+            context,
+            "Authenticating with Firebase...",
+            Toast.LENGTH_SHORT
+        ).show()
+        
         val googleCredentials = GoogleAuthProvider.getCredential(googleIdToken, null)
         return try {
             val user = auth.signInWithCredential(googleCredentials).await().user
             Log.d(TAG, "Firebase auth successful, user: ${user?.email}")
+            Toast.makeText(
+                context,
+                "Sign in successful!",
+                Toast.LENGTH_SHORT
+            ).show()
             SignInResult(
                 data = user?.run {
                     UserData(
@@ -98,6 +108,11 @@ class GoogleAuthUiClient(
             )
         } catch(e: Exception) {
             Log.e(TAG, "Firebase auth failed", e)
+            Toast.makeText(
+                context,
+                "Firebase auth failed: ${e.message}",
+                Toast.LENGTH_LONG
+            ).show()
             if(e is CancellationException) throw e
             SignInResult(
                 data = null,
