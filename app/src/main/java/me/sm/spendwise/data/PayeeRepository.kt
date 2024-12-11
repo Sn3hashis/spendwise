@@ -14,10 +14,10 @@ class PayeeRepository {
     }
 }
 
-data class Payee(
-    val id: Int,
-    val name: String,
-    val mobile: String,
-    val email: String,
-    val profilePic: String? = null // Changed type from String? to Int?
-)
+//data class Payee(
+//    val id: Int,
+//    val name: String,
+//    val mobile: String,
+//    val email: String,
+//    val profilePic: String? = null // Changed type from String? to Int?
+//)

@@ -39,7 +39,7 @@ import me.sm.spendwise.ui.components.BottomNavigationBar
 import me.sm.spendwise.navigation.NavigationState
 import me.sm.spendwise.navigation.Screen as NavScreen
 import androidx.compose.runtime.mutableStateListOf
-import me.sm.spendwise.ui.screens.Payee
+import me.sm.spendwise.data.Payee
 
 class MainActivity : ComponentActivity() {
     private lateinit var themePreference: ThemePreference
@@ -166,49 +166,10 @@ class MainActivity : ComponentActivity() {
                     NavScreen.Profile -> ProfileScreen()
                     NavScreen.Expense -> ExpenseScreen { NavigationState.navigateBack() }
                     NavScreen.Income -> IncomeScreen { NavigationState.navigateBack() }
-                    NavScreen.Transfer -> TransferScreen { NavigationState.navigateBack() }
-//                     NavScreen.ManagePayee -> PayeeScreen(
-//                         payees = payees,
-// //                        onBackPress = { NavigationState.navigateBack()},
-//                         onAddPayeeClick = { NavigationState.navigateTo(NavScreen.AddNewPayee) },
-//                         onEditPayeeClick = { /* TODO: Implement edit payee functionality */ },
-//                         onDeletePayeeClick = { payee -> payees.remove(payee) },
-//                         onEmailClick = { /* TODO: Implement email functionality */ },
-//                         onWhatsAppClick = { /* TODO: Implement WhatsApp functionality */ },
-//                         onSmsClick = { /* TODO: Implement SMS functionality */ }
-//                     )
-//                     NavScreen.AddNewPayee -> AddNewPayeeScreen(
-//                         onPayeeAdded = { newPayee ->
-//                             payees.add(newPayee)
-//                             NavigationState.navigateTo(NavScreen.ManagePayee)
-//                         }
-//                     )
-
-
-                        NavScreen.ManagePayee -> PayeeScreen(
-                            payees = payees,
-                            onAddPayeeClick = { NavigationState.navigateTo(NavScreen.AddNewPayee) },
-                            onEditPayeeClick = { payee ->
-                                NavigationState.payeeToEdit = payee // Store payee before navigation
-                                NavigationState.navigateTo(NavScreen.AddNewPayee)
-                            },
-                            onDeletePayeeClick = { payee -> payees.remove(payee) },
-                            onBackPress = { NavigationState.navigateBack() }
-                        )
-                       NavScreen.AddNewPayee -> AddNewPayeeScreen(
-    payeeToEdit = NavigationState.payeeToEdit,  // Pass the payee
-    onPayeeAdded = { newPayee ->
-        if (NavigationState.payeeToEdit != null) {
-            payees.remove(NavigationState.payeeToEdit)
-            payees.add(newPayee)
-            NavigationState.payeeToEdit = null
-        } else {
-            payees.add(newPayee)
-        }
-        NavigationState.navigateTo(NavScreen.ManagePayee)
-    }
-)
-
+                    NavScreen.Transfer -> TransferScreen(
+                        payees = payees,
+                        onBackPress = { NavigationState.navigateBack() }
+                    )
                     NavScreen.ExpenseDetails -> ExpenseDetailScreen(
                         expenseTitle = NavigationState.currentExpenseId ?: "",
                         onBackPress = { NavigationState.navigateBack() },
@@ -234,6 +195,29 @@ class MainActivity : ComponentActivity() {
                         onBackPress = { NavigationState.navigateBack() },
                         onSecurityMethodSelected = { /* TODO */ }
                     )
+                    NavScreen.ManagePayee -> PayeeScreen(
+                        payees = payees,
+                        onAddPayeeClick = { NavigationState.navigateTo(NavScreen.AddNewPayee) },
+                        onEditPayeeClick = { payee ->
+                            NavigationState.payeeToEdit = payee
+                            NavigationState.navigateTo(NavScreen.AddNewPayee)
+                        },
+                        onDeletePayeeClick = { payee -> payees.remove(payee) },
+                        onBackPress = { NavigationState.navigateBack() }
+                    )
+                    NavScreen.AddNewPayee -> AddNewPayeeScreen(
+                        payeeToEdit = NavigationState.payeeToEdit,
+                        onPayeeAdded = { newPayee ->
+                            if (NavigationState.payeeToEdit != null) {
+                                payees.remove(NavigationState.payeeToEdit)
+                                payees.add(newPayee)
+                                NavigationState.payeeToEdit = null
+                            } else {
+                                payees.add(newPayee)
+                            }
+                            NavigationState.navigateTo(NavScreen.ManagePayee)
+                        }
+                    )
                     else -> HomeScreen { expenseId ->
                         NavigationState.currentExpenseId = expenseId
                         NavigationState.navigateTo(NavScreen.ExpenseDetails)
@@ -253,4 +237,3 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
-

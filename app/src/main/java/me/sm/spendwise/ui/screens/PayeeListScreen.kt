@@ -19,42 +19,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import me.sm.spendwise.R
-
-data class Payee(
-    val id: Int,
-    val name: String,
-    val mobile: String,
-    val email: String,
-    val profilePic: String?
-)
+import me.sm.spendwise.data.Payee
+import me.sm.spendwise.navigation.NavigationState
+import me.sm.spendwise.navigation.Screen as NavScreen
 
 @Composable
 fun PayeeListScreen(
+    payees: List<Payee>,
     onBackPress: () -> Unit,
     onPayeeSelected: (Payee) -> Unit
 ) {
-    // Sample payee list - Replace with your actual data
-    val payees = listOf(
-        Payee(
-            1,
-            "John Doe",
-            "+1 234 567 8900",
-            "john.doe@email.com",
-            profilePic = "https://www.press-seal.com/wp-content/uploads/2016/10/img-team-GENERIC-500x500.jpg",
-
-
-            ),
-        Payee(
-            2, "Jane Smith", "+1 234 567 8901", "jane.smith@email.com",
-            profilePic = "https://www.press-seal.com/wp-content/uploads/2016/10/img-team-GENERIC-500x500.jpg",
-        ),
-        Payee(
-            3, "Mike Johnson", "+1 234 567 8902", "mike.j@email.com",
-            profilePic = "https://www.press-seal.com/wp-content/uploads/2016/10/img-team-GENERIC-500x500.jpg",
-        ),
-        // Add more payees as needed
-    )
-
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -85,7 +59,7 @@ fun PayeeListScreen(
 
         // Manage Payees Button
         Button(
-            onClick = { /* Handle manage payees */ },
+            onClick = { NavigationState.navigateTo(NavScreen.ManagePayee) },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp)
@@ -123,7 +97,6 @@ fun PayeeListScreen(
         ) {
             items(payees) { payee ->
                 PayeeItem(
-
                     payee = payee,
                     onSelect = { onPayeeSelected(payee) }
                 )
@@ -159,7 +132,7 @@ private fun PayeeItem(
             color = MaterialTheme.colorScheme.primaryContainer
         ) {
             Icon(
-                painter = painterResource(id = payee.id),
+                painter = painterResource(id = R.drawable.profile_placeholder),
                 contentDescription = null,
                 modifier = Modifier
                     .padding(8.dp)
@@ -191,4 +164,4 @@ private fun PayeeItem(
             )
         }
     }
-} 
+}

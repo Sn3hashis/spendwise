@@ -41,11 +41,15 @@ import me.sm.spendwise.ui.screens.AttachmentOptionsScreen
 import me.sm.spendwise.R
 import me.sm.spendwise.data.NotificationManager
 import me.sm.spendwise.navigation.NavigationState.payeeToEdit
+import me.sm.spendwise.data.Payee
 
 @SuppressLint("Range")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddNewPayeeScreen(onPayeeAdded: (Payee) -> Unit, payeeToEdit: Payee? = null,  ) {
+fun AddNewPayeeScreen(
+    payeeToEdit: Payee? = null,
+    onPayeeAdded: (Payee) -> Unit
+) {
     var name by remember(payeeToEdit) { mutableStateOf(payeeToEdit?.name ?: "") }
     var phone by remember(payeeToEdit) { mutableStateOf(payeeToEdit?.mobile ?: "") }
     var email by remember(payeeToEdit) { mutableStateOf(payeeToEdit?.email ?: "") }
@@ -157,7 +161,7 @@ fun AddNewPayeeScreen(onPayeeAdded: (Payee) -> Unit, payeeToEdit: Payee? = null,
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                               text = if (payeeToEdit != null) "Update ${payeeToEdit!!.name}" else "Add New Payee",
+                                text = if (payeeToEdit != null) "Update ${payeeToEdit!!.name}" else "Add New Payee",
                                 textAlign = TextAlign.Center,
                                 fontWeight = FontWeight.Bold
                             )
@@ -189,7 +193,7 @@ fun AddNewPayeeScreen(onPayeeAdded: (Payee) -> Unit, payeeToEdit: Payee? = null,
                     .padding(16.dp)
             ) {
                 Spacer(modifier = Modifier.height(32.dp))
-                
+
                 if (profilePicUri != null) {
                     Image(
                         painter = rememberAsyncImagePainter(model = profilePicUri),
@@ -310,17 +314,17 @@ fun AddNewPayeeScreen(onPayeeAdded: (Payee) -> Unit, payeeToEdit: Payee? = null,
                                 profilePic = profilePicUri,
                             )
                             onPayeeAdded(newPayee)
-                            
+
                             // Add Toast
                             Toast.makeText(context, "$name added successfully", Toast.LENGTH_SHORT).show()
-                            
+
                             // Add Notification
                             NotificationManager.addTransactionNotification(
                                 type = "New Payee Added",
                                 amount = "",
                                 category = "$name Added in the payee list"
                             )
-                            
+
                             NavigationState.navigateTo(NavScreen.ManagePayee)
                         } else {
                             isNameError = name.isEmpty()

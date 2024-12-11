@@ -40,11 +40,13 @@ import java.util.*
 import android.net.Uri
 import me.sm.spendwise.data.CurrencyState
 import me.sm.spendwise.data.NotificationManager
+import me.sm.spendwise.data.Payee
 import me.sm.spendwise.navigation.Screen as NavScreen
 
 @Composable
 fun TransferScreen(
-    onBackPress: () -> Unit
+    onBackPress: () -> Unit,
+    payees: List<Payee> = emptyList()
 ) {
     var amount by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
@@ -54,7 +56,7 @@ fun TransferScreen(
     var showToDropdown by remember { mutableStateOf(false) }
     var selectedFromWallet by remember { mutableStateOf("") }
     var selectedToWallet by remember { mutableStateOf("") }
-    
+
     var selectedDate by remember { mutableStateOf(LocalDate.now()) }
     val dateFormatter = DateTimeFormatter.ofPattern("dd MMM yyyy")
     val context = LocalContext.current
@@ -84,6 +86,7 @@ fun TransferScreen(
 
     if (showPayeeList) {
         PayeeListScreen(
+            payees = payees,
             onBackPress = { showPayeeList = false },
             onPayeeSelected = { payee ->
                 selectedToWallet = payee.name
@@ -338,7 +341,7 @@ fun TransferScreen(
                             .clickable(
                                 indication = null,
                                 interactionSource = remember { MutableInteractionSource() }
-                            ) { 
+                            ) {
                                 datePickerDialog.show()
                             }
                             .padding(horizontal = 16.dp),
@@ -408,21 +411,21 @@ fun TransferScreen(
 
                     // Save Button
                     Button(
-                        onClick = { 
+                        onClick = {
                             view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
-                            
+
                             if (amount.isEmpty() || amount == "0") {
                                 Toast.makeText(context, "Please enter an amount", Toast.LENGTH_SHORT).show()
-                               
+
                             } else {
-                                  NotificationManager.addTransactionNotification(
-    type = "Transfer",
-    amount = "${CurrencyState.currentCurrency}$amount",
-    category = "Transfer"
-)
+                                NotificationManager.addTransactionNotification(
+                                    type = "Transfer",
+                                    amount = "${CurrencyState.currentCurrency}$amount",
+                                    category = "Transfer"
+                                )
                                 Toast.makeText(
-                                    context, 
-                                    "$${amount} $currency transfer saved", 
+                                    context,
+                                    "$${amount} $currency transfer saved",
                                     Toast.LENGTH_SHORT
                                 ).show()
                                 NavigationState.navigateTo(NavScreen.Home)
@@ -442,7 +445,7 @@ fun TransferScreen(
                             fontWeight = FontWeight.SemiBold
                         )
                     }
-                    
+
                     Spacer(modifier = Modifier.height(16.dp))
                 }
             }
@@ -470,4 +473,4 @@ fun TransferScreen(
             }
         )
     }
-} 
+}

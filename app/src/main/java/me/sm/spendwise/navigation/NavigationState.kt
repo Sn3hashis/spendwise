@@ -3,9 +3,7 @@ package me.sm.spendwise.navigation
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-
-import me.sm.spendwise.navigation.NavigationState.currentScreen
-import me.sm.spendwise.ui.screens.Payee
+import me.sm.spendwise.data.Payee
 
 enum class Screen {
     Home,
@@ -36,39 +34,40 @@ enum class Screen {
 }
 
 object NavigationState {
-        var currentScreen by mutableStateOf(Screen.Home)
-        var currentExpenseId: String? = null
-        var payeeToEdit: Payee? by mutableStateOf(null)
-        // ... other properties
+    var currentScreen by mutableStateOf<Screen>(Screen.Home)
+    var currentExpenseId by mutableStateOf<String?>(null)
+    var payeeToEdit by mutableStateOf<Payee?>(null)
+    // ... other properties
 
-        fun navigateTo(screen: Screen) {
-            currentScreen = screen
-        }
-fun navigateBack() {
+    fun navigateTo(screen: Screen) {
+        currentScreen = screen
+    }
+
+    fun navigateBack() {
         currentScreen = when (currentScreen) {
             Screen.Settings -> Screen.Profile
-//        Screen.ManagePayee -> Screen.Profile
+            Screen.ManagePayee -> Screen.Profile
             Screen.Currency -> Screen.Settings
-            Screen.Theme -> Screen.Settings  
+            Screen.Theme -> Screen.Settings
             Screen.Language -> Screen.Settings
             Screen.Security -> Screen.Settings
             Screen.Notifications -> Screen.Settings
             Screen.ExpenseDetails, Screen.AttachmentOptions -> Screen.Expense
             Screen.TransactionFilter -> Screen.Home
             Screen.NotificationView -> Screen.Home
-            Screen.IncomeCategoryScreen ->Screen.IncomeScreen
+            Screen.IncomeCategoryScreen -> Screen.IncomeScreen
             Screen.ExpenseCategoryScreen -> Screen.ExpenseScreen
             Screen.AddNewPayee -> Screen.ManagePayee
 
             else -> Screen.Home
         }
-}
-        fun reset() {
-            currentScreen = Screen.Home
-        }
+    }
+
+    fun reset() {
+        currentScreen = Screen.Home
+    }
 }
 
-    // fun navigateToLogin() {
-    //     currentScreen = Screen.Login
-    // }
-
+// fun navigateToLogin() {
+//     currentScreen = Screen.Login
+// }
