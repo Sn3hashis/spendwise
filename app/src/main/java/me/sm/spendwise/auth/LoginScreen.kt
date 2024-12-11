@@ -40,6 +40,9 @@ import me.sm.spendwise.ui.Screen
 import me.sm.spendwise.data.SecurityMethod
 import kotlinx.coroutines.launch
 import android.widget.Toast
+import com.google.android.gms.auth.api.identity.Identity
+import androidx.activity.result.IntentSenderRequest
+import androidx.activity.result.contract.ActivityResultContracts.StartIntentSenderForResult
 
 @Composable
 fun LoginScreen(
@@ -58,36 +61,30 @@ fun LoginScreen(
     
     val scope = rememberCoroutineScope()
     
+    val googleAuthUiClient by remember {
+        mutableStateOf(
+            GoogleAuthUiClient(
+                context = context,
+                oneTapClient = Identity.getSignInClient(context)
+            )
+        )
+    }
+    
     val launcher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.StartActivityForResult()
-    ) { result ->
-        if (result.resultCode == Activity.RESULT_OK) {
-            val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
-            try {
-                val account = task.getResult(ApiException::class.java)
-                val credential = GoogleAuthProvider.getCredential(account.idToken, null)
-                auth.signInWithCredential(credential)
-                    .addOnCompleteListener { task ->
-                        if (task.isSuccessful) {
-                            AppState.currentUser = auth.currentUser
-                            // Check if user has security setup
-                            scope.launch {
-                                securityPreference.getSecurityMethodFlow().collect { method ->
-                                    if (method == null || method == SecurityMethod.NONE) {
-                                        AppState.currentScreen = Screen.SecuritySetup
-                                    } else {
-                                        AppState.currentScreen = Screen.Main
-                                    }
-                                }
-                            }
-                        }
+        contract = StartIntentSenderForResult(),
+        onResult = { result ->
+            if(result.resultCode == Activity.RESULT_OK) {
+                scope.launch {
+                    val signInResult = googleAuthUiClient.signInWithIntent(
+                        intent = result.data ?: return@launch
+                    )
+                    if (signInResult.data != null) {
+                        onLoginSuccess()
                     }
-            } catch (e: ApiException) {
-                // Show error message
-                Toast.makeText(context, "Sign in failed: ${e.message}", Toast.LENGTH_SHORT).show()
+                }
             }
         }
-    }
+    )
 
     Column(
         modifier = Modifier
@@ -231,12 +228,39 @@ fun LoginScreen(
         }
 
         // Google Sign In button
-        GoogleSignInButton(
-            onClick = { 
-                launcher.launch(googleSignInClient.signInIntent)
+        Button(
+            onClick = {
+                scope.launch {
+                    val signInIntentSender = googleAuthUiClient.signIn()
+                    launcher.launch(
+                        IntentSenderRequest.Builder(
+                            signInIntentSender ?: return@launch
+                        ).build()
+                    )
+                }
             },
-            modifier = Modifier.fillMaxWidth()
-        )
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.surface,
+                contentColor = MaterialTheme.colorScheme.onSurface
+            )
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_google),
+                    contentDescription = "Google Icon",
+                    modifier = Modifier.size(24.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Sign in with Google")
+            }
+        }
 
         Spacer(modifier = Modifier.weight(1f))
 
