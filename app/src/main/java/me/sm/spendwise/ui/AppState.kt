@@ -19,7 +19,8 @@ enum class Screen {
     Login,
     SignUp,
     Verification,
+    SecuritySetup,
+    Main,
     ForgotPassword,
-    ForgotPasswordSent,
-    Main
+    ForgotPasswordSent
 } 
