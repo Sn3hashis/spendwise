@@ -3,6 +3,7 @@ package me.sm.spendwise.auth
 import android.content.Context
 import android.content.Intent
 import android.content.IntentSender
+import android.util.Log
 import com.google.android.gms.auth.api.identity.BeginSignInRequest
 import com.google.android.gms.auth.api.identity.BeginSignInRequest.GoogleIdTokenRequestOptions
 import com.google.android.gms.auth.api.identity.SignInClient
@@ -17,9 +18,11 @@ class GoogleAuthUiClient(
     private val oneTapClient: SignInClient
 ) {
     private val auth = Firebase.auth
+    private val TAG = "GoogleAuthUiClient"
 
     suspend fun signIn(): IntentSender? {
         val result = try {
+            Log.d(TAG, "Starting sign in process")
             oneTapClient.beginSignIn(
                 BeginSignInRequest.builder()
                     .setGoogleIdTokenRequestOptions(
@@ -33,7 +36,7 @@ class GoogleAuthUiClient(
                     .build()
             ).await()
         } catch(e: Exception) {
-            e.printStackTrace()
+            Log.e(TAG, "Error during beginSignIn", e)
             if(e is CancellationException) throw e
             null
         }
@@ -42,9 +45,10 @@ class GoogleAuthUiClient(
 
     suspend fun signInWithIntent(intent: Intent): SignInResult {
         val credential = try {
+            Log.d(TAG, "Getting credentials from intent")
             oneTapClient.getSignInCredentialFromIntent(intent)
         } catch(e: Exception) {
-            e.printStackTrace()
+            Log.e(TAG, "Error getting credentials", e)
             return SignInResult(
                 data = null,
                 errorMessage = e.message
@@ -53,15 +57,18 @@ class GoogleAuthUiClient(
         
         val googleIdToken = credential.googleIdToken
         if(googleIdToken == null) {
+            Log.e(TAG, "No ID token found")
             return SignInResult(
                 data = null,
                 errorMessage = "No ID token found"
             )
         }
         
+        Log.d(TAG, "Got ID token, attempting Firebase auth")
         val googleCredentials = GoogleAuthProvider.getCredential(googleIdToken, null)
         return try {
             val user = auth.signInWithCredential(googleCredentials).await().user
+            Log.d(TAG, "Firebase auth successful, user: ${user?.email}")
             SignInResult(
                 data = user?.run {
                     UserData(
@@ -74,7 +81,7 @@ class GoogleAuthUiClient(
                 errorMessage = null
             )
         } catch(e: Exception) {
-            e.printStackTrace()
+            Log.e(TAG, "Firebase auth failed", e)
             if(e is CancellationException) throw e
             SignInResult(
                 data = null,

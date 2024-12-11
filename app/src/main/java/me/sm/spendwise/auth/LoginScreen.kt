@@ -44,6 +44,7 @@ import com.google.android.gms.auth.api.identity.Identity
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts.StartIntentSenderForResult
 import androidx.compose.foundation.clickable
+import android.util.Log
 
 @Composable
 fun LoginScreen(
@@ -71,20 +72,26 @@ fun LoginScreen(
         )
     }
 
+    private val TAG = "LoginScreen"
+
     val launcher = rememberLauncherForActivityResult(
         contract = StartIntentSenderForResult(),
         onResult = { result ->
+            Log.d(TAG, "Got activity result: ${result.resultCode}")
             if(result.resultCode == Activity.RESULT_OK) {
                 scope.launch {
                     try {
+                        Log.d(TAG, "Processing sign-in result")
                         val signInResult = googleAuthUiClient.signInWithIntent(
                             intent = result.data ?: return@launch
                         )
+                        Log.d(TAG, "Sign in result: $signInResult")
                         if (signInResult.data != null) {
                             AppState.currentUser = auth.currentUser
                             AppState.currentScreen = Screen.Main
                             onLoginSuccess()
                         } else {
+                            Log.e(TAG, "Sign in failed: ${signInResult.errorMessage}")
                             Toast.makeText(
                                 context,
                                 signInResult.errorMessage ?: "Sign in failed",
@@ -92,7 +99,7 @@ fun LoginScreen(
                             ).show()
                         }
                     } catch (e: Exception) {
-                        e.printStackTrace()
+                        Log.e(TAG, "Error during sign in", e)
                         Toast.makeText(
                             context,
                             "Sign in error: ${e.message}",
@@ -100,6 +107,8 @@ fun LoginScreen(
                         ).show()
                     }
                 }
+            } else {
+                Log.d(TAG, "Sign in cancelled or failed: ${result.resultCode}")
             }
         }
     )
@@ -250,8 +259,10 @@ fun LoginScreen(
             onClick = {
                 scope.launch {
                     try {
+                        Log.d(TAG, "Starting Google Sign In")
                         val signInIntentSender = googleAuthUiClient.signIn()
                         if (signInIntentSender == null) {
+                            Log.e(TAG, "Sign in intent sender is null")
                             Toast.makeText(
                                 context,
                                 "Google Sign In not available",
@@ -264,7 +275,7 @@ fun LoginScreen(
                                 .build()
                         )
                     } catch (e: Exception) {
-                        e.printStackTrace()
+                        Log.e(TAG, "Error launching sign in", e)
                         Toast.makeText(
                             context,
                             "Sign in error: ${e.message}",
