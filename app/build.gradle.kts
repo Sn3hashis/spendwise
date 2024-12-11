@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -62,6 +63,9 @@ dependencies {
     debugImplementation(libs.ui.test.manifest)
     implementation (libs.androidx.datastore.preferences)
     implementation (libs.androidx.datastore.preferences.core)
-    implementation (libs.androidx.biometric)
-    implementation (libs.androidx.datastore.preferences.v100)
+    implementation("com.google.android.gms:play-services-auth:20.7.0")
+    implementation(platform("com.google.firebase:firebase-bom:32.7.0"))
+    implementation("com.google.firebase:firebase-auth-ktx")
+    implementation("com.google.firebase:firebase-storage-ktx")
+    implementation("androidx.biometric:biometric:1.2.0-alpha05")
 }
