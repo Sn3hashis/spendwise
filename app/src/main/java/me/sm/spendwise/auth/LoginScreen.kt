@@ -100,12 +100,6 @@ fun LoginScreen(
                         ).show()
                     }
                 }
-            } else {
-                Toast.makeText(
-                    context,
-                    "Sign in cancelled",
-                    Toast.LENGTH_LONG
-                ).show()
             }
         }
     )
@@ -260,13 +254,14 @@ fun LoginScreen(
                         if (signInIntentSender == null) {
                             Toast.makeText(
                                 context,
-                                "Couldn't get sign in intent",
+                                "Google Sign In not available",
                                 Toast.LENGTH_LONG
                             ).show()
                             return@launch
                         }
                         launcher.launch(
-                            IntentSenderRequest.Builder(signInIntentSender).build()
+                            IntentSenderRequest.Builder(signInIntentSender)
+                                .build()
                         )
                     } catch (e: Exception) {
                         e.printStackTrace()

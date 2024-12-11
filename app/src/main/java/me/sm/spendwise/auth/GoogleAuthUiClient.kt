@@ -21,7 +21,16 @@ class GoogleAuthUiClient(
     suspend fun signIn(): IntentSender? {
         val result = try {
             oneTapClient.beginSignIn(
-                buildSignInRequest()
+                BeginSignInRequest.builder()
+                    .setGoogleIdTokenRequestOptions(
+                        GoogleIdTokenRequestOptions.builder()
+                            .setSupported(true)
+                            .setFilterByAuthorizedAccounts(false)
+                            .setServerClientId(context.getString(R.string.web_client_id))
+                            .build()
+                    )
+                    .setAutoSelectEnabled(false)
+                    .build()
             ).await()
         } catch(e: Exception) {
             e.printStackTrace()
