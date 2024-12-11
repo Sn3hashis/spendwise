@@ -9,22 +9,15 @@ import kotlinx.coroutines.flow.map
 
 private val Context.dataStore by preferencesDataStore(name = "security_prefs")
 
-enum class SecurityMethod {
-    PIN,
-    FINGERPRINT,
-    NONE
-}
-
 class SecurityPreference(private val context: Context) {
     private val securityMethodKey = stringPreferencesKey("security_method")
     private val pinKey = stringPreferencesKey("pin")
 
-    val securityMethodFlow: Flow<SecurityMethod> = context.dataStore.data
-        .map { preferences ->
-            SecurityMethod.valueOf(
-                preferences[securityMethodKey] ?: SecurityMethod.NONE.name
-            )
+    fun getSecurityMethodFlow(): Flow<SecurityMethod?> {
+        return context.dataStore.data.map { preferences ->
+            preferences[securityMethodKey]?.let { SecurityMethod.valueOf(it) }
         }
+    }
 
     suspend fun saveSecurityMethod(method: SecurityMethod) {
         context.dataStore.edit { preferences ->
@@ -38,8 +31,13 @@ class SecurityPreference(private val context: Context) {
         }
     }
 
-    fun getPin(): Flow<String?> = context.dataStore.data
-        .map { preferences ->
+    fun getPin(): Flow<String?> {
+        return context.dataStore.data.map { preferences ->
             preferences[pinKey]
         }
+    }
+}
+
+enum class SecurityMethod {
+    NONE, PIN, FINGERPRINT, FACE_ID
 }

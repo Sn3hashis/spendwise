@@ -36,6 +36,9 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import me.sm.spendwise.ui.AppState
 import me.sm.spendwise.data.SecurityPreference
+import me.sm.spendwise.ui.Screen
+import me.sm.spendwise.data.SecurityMethod
+import kotlinx.coroutines.launch
 
 @Composable
 fun LoginScreen(
@@ -52,6 +55,8 @@ fun LoginScreen(
     val auth = remember { FirebaseAuth.getInstance() }
     val googleSignInClient = remember { getGoogleSignInClient(context) }
     
+    val scope = rememberCoroutineScope()
+    
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
     ) { result ->
@@ -65,11 +70,13 @@ fun LoginScreen(
                         if (task.isSuccessful) {
                             AppState.currentUser = auth.currentUser
                             // Check if user has security setup
-                            securityPreference.getSecurityMethod().value?.let { method ->
-                                if (method == SecurityMethod.NONE) {
-                                    AppState.currentScreen = Screen.SecuritySetup
-                                } else {
-                                    onLoginSuccess()
+                            scope.launch {
+                                securityPreference.getSecurityMethodFlow().collect { method ->
+                                    if (method == null || method == SecurityMethod.NONE) {
+                                        AppState.currentScreen = Screen.SecuritySetup
+                                    } else {
+                                        onLoginSuccess()
+                                    }
                                 }
                             }
                         }
