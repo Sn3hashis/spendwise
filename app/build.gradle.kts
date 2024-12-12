@@ -68,4 +68,5 @@ dependencies {
     implementation("com.google.firebase:firebase-auth-ktx")
     implementation("com.google.firebase:firebase-storage-ktx")
     implementation("androidx.biometric:biometric:1.2.0-alpha05")
+    implementation("com.google.firebase:firebase-functions-ktx")
 }

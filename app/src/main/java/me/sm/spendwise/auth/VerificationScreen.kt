@@ -1,5 +1,6 @@
 package me.sm.spendwise.auth
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -25,6 +26,10 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.focusable
 
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.platform.LocalContext
+import kotlinx.coroutines.launch
+import androidx.compose.foundation.border
+import androidx.compose.ui.graphics.Color
 
 @Composable
 fun OtpInput(
@@ -32,65 +37,55 @@ fun OtpInput(
     onOtpTextChange: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var focused by remember { mutableStateOf(false) }
-
-    Box(modifier = modifier) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.Start
-        ) {
-            repeat(6) { index ->
-                Box(
-                    contentAlignment = Alignment.Center,
-                    modifier = Modifier
-                        .padding(end = if (index < 5) 12.dp else 0.dp)
-                        .size(40.dp)
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(40.dp)
-                            .background(
-                                color = if (index < otpText.length) 
-                                    MaterialTheme.colorScheme.primary 
-                                else MaterialTheme.colorScheme.outline.copy(alpha = 0.2f),
-                                shape = CircleShape
-                            )
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        repeat(6) { index ->
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .aspectRatio(1f)
+                    .background(
+                        color = if (index < otpText.length) 
+                            MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+                        else MaterialTheme.colorScheme.surface,
+                        shape = RoundedCornerShape(12.dp)
                     )
-                    
-                    if (index < otpText.length) {
-                        Text(
-                            text = otpText[index].toString(),
-                            color = MaterialTheme.colorScheme.onPrimary,
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                }
+                    .border(
+                        width = 1.dp,
+                        color = if (index < otpText.length) 
+                            MaterialTheme.colorScheme.primary
+                        else MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
+                        shape = RoundedCornerShape(12.dp)
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = if (index < otpText.length) otpText[index].toString() else "",
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
             }
         }
-
-        BasicTextField(
-            value = otpText,
-            onValueChange = { 
-                if (it.length <= 6) onOtpTextChange(it.filter { char -> char.isDigit() }) 
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .alpha(0f)
-                .focusable(true)
-                .clickable { focused = true },
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Number,
-                imeAction = ImeAction.Done
-            ),
-            singleLine = true,
-            cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
-            textStyle = LocalTextStyle.current.copy(
-                fontSize = 16.sp,
-                textAlign = TextAlign.Center
-            )
-        )
     }
+
+    // Hidden text field for keyboard input
+    BasicTextField(
+        value = otpText,
+        onValueChange = { 
+            if (it.length <= 6) onOtpTextChange(it.filter { char -> char.isDigit() })
+        },
+        modifier = Modifier
+            .fillMaxWidth()
+            .alpha(0f),
+        keyboardOptions = KeyboardOptions(
+            keyboardType = KeyboardType.Number,
+            imeAction = ImeAction.Done
+        ),
+        singleLine = true
+    )
 }
 
 @Composable
@@ -99,10 +94,15 @@ fun VerificationScreen(
     onBackClick: () -> Unit,
     onVerificationComplete: () -> Unit
 ) {
-    var verificationCode by remember { mutableStateOf("") }
+    var otpValue by remember { mutableStateOf("") }
     var timeLeft by remember { mutableStateOf(300) }
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val authManager = remember { FirebaseAuthManager() }
 
+    // Send OTP when screen is first displayed
     LaunchedEffect(Unit) {
+        authManager.sendVerificationEmail(email)
         while (timeLeft > 0) {
             delay(1000)
             timeLeft--
@@ -113,14 +113,14 @@ fun VerificationScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
-            .padding(top = 48.dp)
-            .padding(horizontal = 24.dp)
+            .padding(24.dp)
+            .statusBarsPadding()
     ) {
-        // Header with back button and title
+        // Back button and title
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = 32.dp)
+                .padding(vertical = 24.dp)
         ) {
             IconButton(
                 onClick = onBackClick,
@@ -135,98 +135,91 @@ fun VerificationScreen(
             
             Text(
                 text = "Verification",
-                fontSize = 32.sp,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onBackground,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Medium,
                 modifier = Modifier.align(Alignment.Center)
             )
         }
 
         Spacer(modifier = Modifier.height(48.dp))
 
-        // Verification title
         Text(
             text = "Enter your\nVerification Code",
-            fontSize = 36.sp,
+            fontSize = 32.sp,
             fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onBackground,
-            lineHeight = 44.sp
+            lineHeight = 40.sp
         )
 
         Spacer(modifier = Modifier.height(48.dp))
 
         // OTP Input
         OtpInput(
-            otpText = verificationCode,
-            onOtpTextChange = { verificationCode = it },
-            modifier = Modifier.fillMaxWidth()
+            otpText = otpValue,
+            onOtpTextChange = { otpValue = it }
         )
 
         Spacer(modifier = Modifier.height(32.dp))
 
         // Timer
         Text(
-            text = String.format("%02d:%02d", timeLeft / 60, timeLeft % 60),
+            text = String.format("%02d:%02d", timeLeft/60, timeLeft%60),
             color = MaterialTheme.colorScheme.primary,
-            fontSize = 36.sp,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.align(Alignment.CenterHorizontally)
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Medium
+        )
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // Email info text
+        Text(
+            text = "We send verification code to your\nemail ${maskEmail(email)}. You can\ncheck your inbox.",
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+            lineHeight = 24.sp
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Email info text
-        Column(
-            modifier = Modifier.align(Alignment.CenterHorizontally),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(
-                text = "We send verification code to your email",
-                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
-                fontSize = 16.sp
-            )
-            
-            Text(
-                text = maskEmail(email),
-                color = MaterialTheme.colorScheme.primary,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.SemiBold
-            )
-        }
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        // Resend code button
-        TextButton(
-            onClick = { /* Handle resend */ },
-            modifier = Modifier.align(Alignment.CenterHorizontally)
-        ) {
-            Text(
-                text = "I didn't received the code? Send again",
-                color = MaterialTheme.colorScheme.primary,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.SemiBold
-            )
-        }
+        // Resend link
+        Text(
+            text = "I didn't received the code? Send again",
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.clickable {
+                scope.launch {
+                    if (authManager.resendVerificationEmail()) {
+                        timeLeft = 300
+                        Toast.makeText(context, "New code sent", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+        )
 
         Spacer(modifier = Modifier.weight(1f))
 
         // Verify button
         Button(
-            onClick = onVerificationComplete,
+            onClick = {
+                scope.launch {
+                    if (authManager.verifyOTP(otpValue)) {
+                        onVerificationComplete()
+                    } else {
+                        Toast.makeText(context, "Invalid verification code", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp),
-            shape = RoundedCornerShape(16.dp),
+            shape = RoundedCornerShape(32.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.primary
+                containerColor = MaterialTheme.colorScheme.primary,
+                disabledContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
             ),
-            enabled = verificationCode.length == 6
+            enabled = otpValue.length == 6
         ) {
             Text(
                 text = "Verify",
                 fontSize = 18.sp,
-                fontWeight = FontWeight.SemiBold
+                fontWeight = FontWeight.Medium
             )
         }
 
@@ -237,15 +230,12 @@ fun VerificationScreen(
 private fun maskEmail(email: String): String {
     val parts = email.split("@")
     if (parts.size != 2) return email
-    
     val username = parts[0]
     val domain = parts[1]
-    
     val maskedUsername = when {
         username.length <= 2 -> username
         username.length <= 4 -> username.take(2) + "*".repeat(username.length - 2)
         else -> username.take(2) + "*".repeat(3) + username.takeLast(2)
     }
-    
     return "$maskedUsername@$domain"
 } 
