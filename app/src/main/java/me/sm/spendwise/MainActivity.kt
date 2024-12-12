@@ -116,7 +116,7 @@ class MainActivity : ComponentActivity() {
                             email = AppState.verificationEmail,
                             onBackClick = { AppState.currentScreen = Screen.SignUp },
                             onVerificationComplete = {
-                                AppState.currentScreen = Screen.SecuritySetup
+                                AppState.currentScreen = Screen.Main
                             }
                         )
                         Screen.SecuritySetup -> SecuritySetupScreen(

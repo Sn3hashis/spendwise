@@ -45,6 +45,7 @@ import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts.StartIntentSenderForResult
 import androidx.compose.foundation.clickable
 import android.util.Log
+import androidx.compose.foundation.Image
 import kotlinx.coroutines.tasks.await
 
 @Composable
@@ -259,17 +260,17 @@ fun LoginScreen(
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        // Login button
+        // Sign In button
         Button(
             onClick = {
                 scope.launch {
                     isLoading = true
                     try {
-                        val signInResult = authManager.signInWithEmailAndPassword(email, password)
-                        if (signInResult.data != null) {
+                        val result = authManager.signInWithEmailAndPassword(email, password)
+                        if (result.data != null) {
                             onLoginSuccess()
                         } else {
-                            errorMessage = signInResult.errorMessage
+                            errorMessage = result.errorMessage
                         }
                     } catch (e: Exception) {
                         errorMessage = e.message
@@ -290,123 +291,82 @@ fun LoginScreen(
                     color = MaterialTheme.colorScheme.onPrimary
                 )
             } else {
-                Text("Login")
+                Text(
+                    text = "Login",
+                    fontSize = 16.sp
+                )
             }
         }
 
-        // Forgot Password
-        TextButton(
-            onClick = onForgotPasswordClick,
-            modifier = Modifier.padding(vertical = 8.dp)
-        ) {
-            Text(
-                text = "Forgot Password?",
-                color = MaterialTheme.colorScheme.primary,
-                fontSize = 16.sp
-            )
-        }
-
-        // Or with text
+        // Or with divider
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 24.dp),
-            horizontalArrangement = Arrangement.Center,
+                .padding(vertical = 16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Divider(
-                modifier = Modifier.weight(1f),
-                color = MaterialTheme.colorScheme.outline
-            )
+            Divider(modifier = Modifier.weight(1f))
             Text(
                 text = "Or with",
                 modifier = Modifier.padding(horizontal = 16.dp),
-                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.6f),
-                fontSize = 14.sp
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
             )
-            Divider(
-                modifier = Modifier.weight(1f),
-                color = MaterialTheme.colorScheme.outline
-            )
+            Divider(modifier = Modifier.weight(1f))
         }
 
         // Google Sign In button
-        Button(
+        OutlinedButton(
             onClick = {
                 scope.launch {
-                    try {
-                        Log.d(TAG, "Starting Google Sign In")
-                        Toast.makeText(
-                            context,
-                            "Starting Google Sign In...",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                        
-                        val signInIntentSender = googleAuthUiClient.signIn()
-                        if (signInIntentSender == null) {
-                            Log.e(TAG, "Sign in intent sender is null")
-                            Toast.makeText(
-                                context,
-                                "Failed to start sign in",
-                                Toast.LENGTH_LONG
-                            ).show()
-                            return@launch
-                        }
-                        launcher.launch(
-                            IntentSenderRequest.Builder(signInIntentSender)
-                                .build()
-                        )
-                    } catch (e: Exception) {
-                        Log.e(TAG, "Error launching sign in", e)
-                        Toast.makeText(
-                            context,
-                            "Error launching sign in: ${e.message}",
-                            Toast.LENGTH_LONG
-                        ).show()
-                    }
+                    val signInIntentSender = googleAuthUiClient.signIn()
+                    launcher.launch(
+                        IntentSenderRequest.Builder(
+                            signInIntentSender ?: return@launch
+                        ).build()
+                    )
                 }
             },
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 8.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.surface,
-                contentColor = MaterialTheme.colorScheme.onSurface
-            )
+                .height(56.dp),
+            shape = RoundedCornerShape(32.dp),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
         ) {
             Row(
-                modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(
+                Image(
                     painter = painterResource(id = R.drawable.ic_google),
-                    contentDescription = "Google Icon",
+                    contentDescription = "Google icon",
                     modifier = Modifier.size(24.dp)
                 )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("Sign in with Google")
+                Spacer(modifier = Modifier.width(12.dp))
+                Text(
+                    text = "Sign in with Google",
+                    fontSize = 16.sp
+                )
             }
         }
 
-        Spacer(modifier = Modifier.weight(1f))
-
-        // Sign up prompt
+        // Sign up prompt at the bottom
         Row(
-            modifier = Modifier.padding(bottom = 24.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 16.dp),
+            horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "Don't have an account yet? ",
-                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.6f)
+                text = "Don't have an account? ",
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
             )
-            TextButton(onClick = onSignUpClick) {
-                Text(
-                    text = "Sign Up",
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.SemiBold
-                )
-            }
+            Text(
+                text = "Sign Up",
+                color = MaterialTheme.colorScheme.primary,
+                fontWeight = FontWeight.Medium,
+                modifier = Modifier.clickable(onClick = onSignUpClick)
+            )
         }
     }
 }

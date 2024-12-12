@@ -75,33 +75,56 @@ class FirebaseAuthManager(private val context: Context) {
     suspend fun signUpWithEmailAndPassword(
         email: String,
         password: String,
+        name: String,
         onSuccess: () -> Unit,
         onError: (String) -> Unit
     ) {
-        try {
-            val result = auth.createUserWithEmailAndPassword(email, password).await()
-            result.user?.let {
-                val otp = generateOTP()
-                val lowercaseEmail = email.lowercase()
-                Log.d("FirebaseAuthManager", "Generated OTP: $otp for email: $lowercaseEmail")
-                
-                val otpData = OtpData(otp, System.currentTimeMillis())
-                saveOtpData(lowercaseEmail, otpData)
-                Log.d("FirebaseAuthManager", "Stored OTP data: ${getOtpData(lowercaseEmail)}")
-
-                if (sendOTP(email, otp)) {
-                    Log.d("FirebaseAuthManager", "OTP sent successfully")
-                    Log.d("FirebaseAuthManager", "Verifying OTP storage: ${getOtpData(lowercaseEmail)}")
-                    onSuccess()
-                } else {
-                    Log.e("FirebaseAuthManager", "Failed to send OTP")
-                    removeOtpData(lowercaseEmail)
-                    onError("Failed to send verification code")
+        withContext(Dispatchers.IO) {
+            try {
+                val result = auth.createUserWithEmailAndPassword(email, password).await()
+                result.user?.let { user ->
+                    // Update user profile with provided name
+                    val profileUpdates = UserProfileChangeRequest.Builder()
+                        .setDisplayName(name)
+                        .build()
+                    
+                    try {
+                        user.updateProfile(profileUpdates).await()
+                        user.reload().await()
+                        AppState.currentUser = auth.currentUser
+                        
+                        // Generate and send OTP
+                        val otp = generateOTP()
+                        val lowercaseEmail = email.lowercase()
+                        
+                        val otpData = OtpData(otp, System.currentTimeMillis())
+                        saveOtpData(lowercaseEmail, otpData)
+                        
+                        if (sendOTP(email, otp)) {
+                            withContext(Dispatchers.Main) {
+                                onSuccess()
+                            }
+                        } else {
+                            removeOtpData(lowercaseEmail)
+                            withContext(Dispatchers.Main) {
+                                onError("Failed to send verification code")
+                            }
+                        }
+                    } catch (e: Exception) {
+                        Log.e("FirebaseAuthManager", "Error updating profile", e)
+                        withContext(Dispatchers.Main) {
+                            onError(e.message ?: "Error updating profile")
+                        }
+                    }
+                } ?: withContext(Dispatchers.Main) {
+                    onError("Failed to create user")
                 }
-            } ?: onError("Failed to create user")
-        } catch (e: Exception) {
-            Log.e("FirebaseAuthManager", "Sign up error", e)
-            onError(e.message ?: "An error occurred during sign up")
+            } catch (e: Exception) {
+                Log.e("FirebaseAuthManager", "Sign up error", e)
+                withContext(Dispatchers.Main) {
+                    onError(e.message ?: "An error occurred during sign up")
+                }
+            }
         }
     }
 
@@ -208,11 +231,14 @@ class FirebaseAuthManager(private val context: Context) {
         return try {
             val result = auth.signInWithEmailAndPassword(email, password).await()
             if (result.user != null) {
+                // Reload user to get latest profile data
+                result.user?.reload()?.await()
+                
                 // Check verification status from persistent storage
                 if (preferencesManager.isEmailVerified(email)) {
-                    AppState.currentUser = result.user
+                    AppState.currentUser = auth.currentUser
                     SignInResult(
-                        data = result.user?.run {
+                        data = auth.currentUser?.run {
                             UserData(
                                 userId = uid,
                                 username = displayName,
