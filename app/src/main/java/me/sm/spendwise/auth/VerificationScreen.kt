@@ -96,16 +96,29 @@ fun VerificationScreen(
 ) {
     var otpValue by remember { mutableStateOf("") }
     var timeLeft by remember { mutableStateOf(300) }
+    var isLoading by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+    
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val authManager = remember { FirebaseAuthManager() }
 
     // Send OTP when screen is first displayed
     LaunchedEffect(Unit) {
-        authManager.sendVerificationEmail(email)
-        while (timeLeft > 0) {
-            delay(1000)
-            timeLeft--
+        isLoading = true
+        try {
+            if (authManager.sendVerificationEmail(email)) {
+                while (timeLeft > 0) {
+                    delay(1000)
+                    timeLeft--
+                }
+            } else {
+                errorMessage = "Failed to send verification email"
+            }
+        } catch (e: Exception) {
+            errorMessage = e.message
+        } finally {
+            isLoading = false
         }
     }
 
@@ -224,6 +237,23 @@ fun VerificationScreen(
         }
 
         Spacer(modifier = Modifier.height(32.dp))
+
+        // Add error message display
+        errorMessage?.let { error ->
+            Text(
+                text = error,
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.padding(vertical = 8.dp)
+            )
+        }
+
+        // Add loading indicator
+        if (isLoading) {
+            CircularProgressIndicator(
+                modifier = Modifier.align(Alignment.CenterHorizontally)
+            )
+        }
     }
 }
 

@@ -15,6 +15,8 @@ class FirebaseAuthManager {
     private val auth = FirebaseAuth.getInstance()
     private val functions = Firebase.functions
     private var storedOTP: String? = null
+    private var otpTimestamp: Long? = null
+    private val OTP_VALIDITY_DURATION = 5 * 60 * 1000 // 5 minutes in milliseconds
 
     suspend fun signUpWithEmail(email: String, password: String, name: String): SignInResult {
         return try {
@@ -50,7 +52,14 @@ class FirebaseAuthManager {
     }
 
     private fun generateOTP(): String {
+        otpTimestamp = System.currentTimeMillis()
         return String.format("%06d", (0..999999).random())
+    }
+
+    private fun isOTPExpired(): Boolean {
+        return otpTimestamp?.let {
+            System.currentTimeMillis() - it > OTP_VALIDITY_DURATION
+        } ?: true
     }
 
     private suspend fun sendOTPEmail(email: String, otp: String) {
@@ -60,20 +69,50 @@ class FirebaseAuthManager {
                 "otp" to otp
             )
             
-            functions
+            val result = functions
                 .getHttpsCallable("sendOTPEmail")
                 .call(data)
                 .await()
             
+            val success = (result.data as? Map<*, *>)?.get("success") as? Boolean
+            if (success != true) {
+                throw Exception("Failed to send OTP email")
+            }
+            
             Log.d("FirebaseAuthManager", "OTP email sent successfully to $email")
         } catch (e: Exception) {
             Log.e("FirebaseAuthManager", "Error sending OTP email", e)
-            throw e
+            throw Exception("Failed to send verification email: ${e.message}")
         }
     }
 
     suspend fun verifyOTP(otp: String): Boolean {
-        return otp == storedOTP
+        return when {
+            storedOTP == null -> {
+                Log.e("FirebaseAuthManager", "No OTP generated")
+                false
+            }
+            isOTPExpired() -> {
+                Log.e("FirebaseAuthManager", "OTP has expired")
+                false
+            }
+            otp != storedOTP -> {
+                Log.e("FirebaseAuthManager", "Invalid OTP")
+                false
+            }
+            else -> {
+                // Mark email as verified in Firebase Auth
+                auth.currentUser?.let { user ->
+                    try {
+                        user.sendEmailVerification().await()
+                        true
+                    } catch (e: Exception) {
+                        Log.e("FirebaseAuthManager", "Failed to mark email as verified", e)
+                        false
+                    }
+                } ?: false
+            }
+        }
     }
 
     suspend fun sendVerificationEmail(email: String): Boolean {
