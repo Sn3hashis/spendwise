@@ -268,12 +268,11 @@ class FirebaseAuthManager(private val context: Context) {
         }
     }
 
-    suspend fun sendPasswordResetEmail(email: String): Boolean {
-        return try {
+    suspend fun sendPasswordResetEmail(email: String) {
+        try {
             auth.sendPasswordResetEmail(email).await()
-            true
         } catch (e: Exception) {
-            false
+            throw e
         }
     }
 
@@ -287,4 +286,13 @@ class FirebaseAuthManager(private val context: Context) {
     }
 
     fun getCurrentUser(): FirebaseUser? = auth.currentUser
+
+    suspend fun doesEmailExist(email: String): Boolean {
+        return try {
+            val result = auth.fetchSignInMethodsForEmail(email).await()
+            result.signInMethods?.isNotEmpty() == true
+        } catch (e: Exception) {
+            false
+        }
+    }
 } 

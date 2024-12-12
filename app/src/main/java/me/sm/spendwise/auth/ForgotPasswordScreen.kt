@@ -1,5 +1,6 @@
 package me.sm.spendwise.auth
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -10,18 +11,33 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.launch
+
 
 @Composable
 fun ForgotPasswordScreen(
     onBackClick: () -> Unit,
-    onContinueClick: (String) -> Unit
+    onEmailSent: (String) -> Unit
 ) {
     var email by remember { mutableStateOf("") }
+    var isLoading by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+    
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val authManager = remember { FirebaseAuthManager(context) }
+
+    val isEmailValid = remember(email) {
+        android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
+    }
 
     Column(
         modifier = Modifier
@@ -62,14 +78,12 @@ fun ForgotPasswordScreen(
         Text(
             text = "Don't worry.",
             fontSize = 22.sp,
-//            fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onBackground
         )
-        
+
         Text(
             text = "Enter your email and we'll\nsend you a link to reset your\npassword.",
             fontSize = 18.sp,
-//            fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onBackground,
             lineHeight = 36.sp
         )
@@ -79,7 +93,14 @@ fun ForgotPasswordScreen(
         // Email field
         OutlinedTextField(
             value = email,
-            onValueChange = { email = it },
+            onValueChange = { newEmail -> 
+                email = newEmail
+                errorMessage = when {
+                    newEmail.isEmpty() -> "Email is required"
+                    !android.util.Patterns.EMAIL_ADDRESS.matcher(newEmail).matches() -> "Invalid email format"
+                    else -> null
+                }
+            },
             label = { Text("Email") },
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
@@ -93,14 +114,42 @@ fun ForgotPasswordScreen(
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Email,
                 imeAction = ImeAction.Done
-            )
+            ),
+            isError = errorMessage != null
         )
+
+        if (errorMessage != null) {
+            Text(
+                text = errorMessage!!,
+                color = MaterialTheme.colorScheme.error,
+                modifier = Modifier.padding(start = 16.dp, top = 4.dp)
+            )
+        }
 
         Spacer(modifier = Modifier.weight(1f))
 
         // Continue button
         Button(
-            onClick = { onContinueClick(email) },
+            onClick = {
+                scope.launch {
+                    isLoading = true
+                    errorMessage = null  // Clear any previous errors
+                    try {
+                        // Try to send reset email directly
+                        // Firebase will throw an error if email doesn't exist
+                        authManager.sendPasswordResetEmail(email)
+                        onEmailSent(email)  // Only called if email exists and reset link is sent
+                    } catch (e: Exception) {
+                        errorMessage = when {
+                            e.message?.contains("user-not-found") == true -> "No account exists with this email"
+                            e.message?.contains("invalid-email") == true -> "Invalid email format"
+                            else -> e.message ?: "An error occurred"
+                        }
+                    } finally {
+                        isLoading = false
+                    }
+                }
+            },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp),
@@ -108,13 +157,20 @@ fun ForgotPasswordScreen(
             colors = ButtonDefaults.buttonColors(
                 containerColor = MaterialTheme.colorScheme.primary
             ),
-            enabled = email.isNotBlank()
+            enabled = email.isNotBlank() && isEmailValid && !isLoading
         ) {
-            Text(
-                text = "Continue",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.SemiBold
-            )
+            if (isLoading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(24.dp),
+                    color = MaterialTheme.colorScheme.onPrimary
+                )
+            } else {
+                Text(
+                    text = "Continue",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
         }
 
         Spacer(modifier = Modifier.height(32.dp))

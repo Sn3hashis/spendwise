@@ -258,6 +258,17 @@ fun LoginScreen(
             )
         )
 
+        // Add Forgot Password text
+        Text(
+            text = "Forgot Password?",
+            color = Color(0xFFB4B4FF),
+            fontWeight = FontWeight.Medium,
+            modifier = Modifier
+                .align(Alignment.End)
+                .padding(top = 8.dp)
+                .clickable { onForgotPasswordClick() }
+        )
+
         Spacer(modifier = Modifier.height(32.dp))
 
         // Sign In button

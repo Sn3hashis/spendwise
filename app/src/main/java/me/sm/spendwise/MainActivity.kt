@@ -145,9 +145,9 @@ class MainActivity : ComponentActivity() {
                         }
                         Screen.ForgotPassword -> ForgotPasswordScreen(
                             onBackClick = { AppState.currentScreen = Screen.Login },
-                            onContinueClick = { email ->
-                                AppState.verificationEmail = email
+                            onEmailSent = { email ->
                                 AppState.currentScreen = Screen.ForgotPasswordSent
+                                AppState.verificationEmail = email
                             }
                         )
                         Screen.ForgotPasswordSent -> ForgotPasswordSentScreen(
