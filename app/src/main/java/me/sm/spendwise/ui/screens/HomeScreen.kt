@@ -12,11 +12,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
 import me.sm.spendwise.R
 import me.sm.spendwise.ui.components.SpendFrequencyChart
 import me.sm.spendwise.data.CurrencyState
@@ -26,7 +28,9 @@ import me.sm.spendwise.navigation.NavigationState
 
 import me.sm.spendwise.navigation.Screen as NavScreen
 import me.sm.spendwise.ui.components.TransactionItem
+import me.sm.spendwise.ui.AppState
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(onNavigateToExpenseDetail: (String) -> Unit) {
     Column(
@@ -58,6 +62,7 @@ fun HomeScreen(onNavigateToExpenseDetail: (String) -> Unit) {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun TopBar() {
     Row(
@@ -68,14 +73,20 @@ private fun TopBar() {
         verticalAlignment = Alignment.CenterVertically
     ) {
         // Profile Image
-        Image(
-            painter = painterResource(id = R.drawable.profile_placeholder),
-            contentDescription = "Profile",
+        Box(
             modifier = Modifier
                 .size(48.dp)
                 .clip(CircleShape)
-                .border(2.dp, MaterialTheme.colorScheme.primary, CircleShape)
-        )
+                .background(MaterialTheme.colorScheme.surface)
+                .clickable { NavigationState.navigateTo(NavScreen.Profile) }
+        ) {
+            AsyncImage(
+                model = AppState.currentUser?.photoUrl ?: R.drawable.profile_placeholder,
+                contentDescription = "Profile",
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop
+            )
+        }
 
         // Month Selector
         Row(

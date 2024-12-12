@@ -1,6 +1,10 @@
-enum class Screen {
-    Home,
-    Settings,
-    Profile
-    // Add other screens as needed
-}
+//enum class Screen {
+//    Onboarding,
+//    Login,
+//    SignUp,
+//    Verification,
+//    SecuritySetup,
+//    Main,
+//    ForgotPassword,
+//    ForgotPasswordSent
+//}
