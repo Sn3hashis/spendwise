@@ -92,6 +92,7 @@ fun TransactionsScreen(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun Header(
     filterCount: Int,
@@ -146,6 +147,7 @@ private fun Header(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun FinancialReportCard() {
     Surface(

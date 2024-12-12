@@ -46,6 +46,7 @@ fun SignUpScreen(
     var password by remember { mutableStateOf("") }
     var isPasswordVisible by remember { mutableStateOf(false) }
     var isTermsAccepted by remember { mutableStateOf(false) }
+    var isLoading by remember { mutableStateOf(false) }
     
     // Validation states
     var emailError by remember { mutableStateOf<String?>(null) }
@@ -56,7 +57,7 @@ fun SignUpScreen(
 
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    val authManager = remember { FirebaseAuthManager() }
+    val authManager = remember { FirebaseAuthManager(context) }
 
     Column(
         modifier = Modifier
@@ -205,37 +206,37 @@ fun SignUpScreen(
         // Sign Up button
         Button(
             onClick = {
-                scope.launch {
-                    try {
-                        val result = authManager.signUpWithEmail(email, password, name)
-                        if (result.data != null) {
-                            onSignUpSuccess(email)
-                        } else {
-                            Toast.makeText(context, result.errorMessage ?: "Sign up failed", 
-                                         Toast.LENGTH_LONG).show()
-                        }
-                    } catch (e: Exception) {
-                        Toast.makeText(context, e.message ?: "Sign up failed", 
-                                     Toast.LENGTH_LONG).show()
+                if (validateInputs()) {
+                    isLoading = true
+                    scope.launch {
+                        authManager.signUpWithEmailAndPassword(
+                            email = email,
+                            password = password,
+                            onSuccess = {
+                                isLoading = false
+                                onSignUpSuccess(email)
+                            },
+                            onError = { error ->
+                                isLoading = false
+                                Toast.makeText(context, error, Toast.LENGTH_LONG).show()
+                            }
+                        )
                     }
                 }
             },
             modifier = Modifier
                 .fillMaxWidth()
-                .height(56.dp),
-            shape = RoundedCornerShape(32.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.primary,
-                disabledContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
-            ),
-            enabled = name.isNotBlank() && email.isNotBlank() && 
-                     password.isNotBlank() && isTermsAccepted
+                .padding(vertical = 16.dp),
+            enabled = !isLoading
         ) {
-            Text(
-                text = "Sign Up",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Medium
-            )
+            if (isLoading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(24.dp),
+                    color = MaterialTheme.colorScheme.onPrimary
+                )
+            } else {
+                Text("Sign Up")
+            }
         }
 
         // Or with divider
@@ -376,4 +377,9 @@ private fun validatePassword(password: String): String? {
         !password.any { !it.isLetterOrDigit() } -> "Include at least one special character"
         else -> null
     }
+}
+
+private fun validateInputs(): Boolean {
+    // Add your validation logic here
+    return true
 } 

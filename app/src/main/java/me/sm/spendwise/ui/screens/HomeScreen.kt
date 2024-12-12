@@ -30,6 +30,7 @@ import me.sm.spendwise.navigation.Screen as NavScreen
 import me.sm.spendwise.ui.components.TransactionItem
 import me.sm.spendwise.ui.AppState
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(onNavigateToExpenseDetail: (String) -> Unit) {
     Column(
@@ -61,6 +62,7 @@ fun HomeScreen(onNavigateToExpenseDetail: (String) -> Unit) {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun TopBar() {
     Row(

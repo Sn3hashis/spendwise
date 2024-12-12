@@ -56,6 +56,8 @@ fun LoginScreen(
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var isPasswordVisible by remember { mutableStateOf(false) }
+    var isLoading by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
 
     val context = LocalContext.current
     val securityPreference = remember { SecurityPreference(context) }
@@ -73,7 +75,7 @@ fun LoginScreen(
         )
     }
 
-    val authManager = remember { FirebaseAuthManager() }
+    val authManager = remember { FirebaseAuthManager(context) }
 
     val TAG = "LoginScreen"
 
@@ -261,41 +263,35 @@ fun LoginScreen(
         Button(
             onClick = {
                 scope.launch {
+                    isLoading = true
                     try {
-                        val result = authManager.signInWithEmail(email, password)
-                        if (result.data != null) {
-                            AppState.currentScreen = Screen.Main
+                        val signInResult = authManager.signInWithEmailAndPassword(email, password)
+                        if (signInResult.data != null) {
                             onLoginSuccess()
                         } else {
-                            Toast.makeText(
-                                context,
-                                result.errorMessage ?: "Login failed",
-                                Toast.LENGTH_LONG
-                            ).show()
+                            errorMessage = signInResult.errorMessage
                         }
                     } catch (e: Exception) {
-                        Toast.makeText(
-                            context,
-                            e.message ?: "Login failed",
-                            Toast.LENGTH_LONG
-                        ).show()
+                        errorMessage = e.message
+                    } finally {
+                        isLoading = false
                     }
                 }
             },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp),
-            shape = RoundedCornerShape(16.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.primary
-            ),
-            enabled = email.isNotBlank() && password.isNotBlank()
+            shape = RoundedCornerShape(32.dp),
+            enabled = !isLoading && email.isNotEmpty() && password.isNotEmpty()
         ) {
-            Text(
-                text = "Login",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Medium
-            )
+            if (isLoading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(24.dp),
+                    color = MaterialTheme.colorScheme.onPrimary
+                )
+            } else {
+                Text("Login")
+            }
         }
 
         // Forgot Password
