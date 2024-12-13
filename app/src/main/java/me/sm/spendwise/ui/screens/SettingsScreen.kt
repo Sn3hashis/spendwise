@@ -16,20 +16,30 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import me.sm.spendwise.data.CurrencyPreference
+import me.sm.spendwise.data.SecurityMethod
+import me.sm.spendwise.data.SecurityPreference
 import me.sm.spendwise.data.ThemePreference
 import me.sm.spendwise.navigation.NavigationState
 import me.sm.spendwise.navigation.Screen
 
 @Composable
 fun SettingsScreen(
-
-    onBackPress: () -> Unit,
+    onBackPress: () -> Unit
 ) {
-    val themePreference = ThemePreference(LocalContext.current)
-val currentTheme by themePreference.themeFlow.collectAsState(initial = ThemeMode.SYSTEM.name)
-val currencyPreference = CurrencyPreference(LocalContext.current)
-val currentCurrency by currencyPreference.currencyFlow.collectAsState(initial = "INR")
+    val context = LocalContext.current
+    val securityPreference = remember { SecurityPreference(context) }
+    var currentSecurityMethod by remember { mutableStateOf<SecurityMethod?>(null) }
 
+    LaunchedEffect(Unit) {
+        securityPreference.getSecurityMethodFlow().collect { method ->
+            currentSecurityMethod = method
+        }
+    }
+
+    val themePreference = ThemePreference(LocalContext.current)
+    val currentTheme by themePreference.themeFlow.collectAsState(initial = ThemeMode.SYSTEM.name)
+    val currencyPreference = CurrencyPreference(LocalContext.current)
+    val currentCurrency by currencyPreference.currencyFlow.collectAsState(initial = "INR")
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -37,8 +47,8 @@ val currentCurrency by currencyPreference.currencyFlow.collectAsState(initial = 
     ) {
         Column(
             modifier = Modifier
-            .fillMaxWidth()
-        // .padding(horizontal = 16.dp, vertical = 12.dp)
+                .fillMaxSize()
+                .statusBarsPadding()
         ) {
             Box(
                 modifier = Modifier
@@ -100,7 +110,11 @@ val currentCurrency by currencyPreference.currencyFlow.collectAsState(initial = 
                 )
                 SettingsItem(
                     title = "Security",
-                    value = "",
+                    subtitle = when (currentSecurityMethod) {
+                        SecurityMethod.PIN -> "PIN"
+                        SecurityMethod.FINGERPRINT -> "Fingerprint"
+                        else -> "Not set"
+                    },
                     onClick = { NavigationState.navigateTo(Screen.Security) },
                 )
 
@@ -113,14 +127,15 @@ val currentCurrency by currencyPreference.currencyFlow.collectAsState(initial = 
 @Composable
 fun SettingsItem(
     title: String,
-    value: String,
+    value: String = "",
+    subtitle: String? = null,
     onClick: () -> Unit
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
-            .padding(vertical = 16.dp),
+            .padding(vertical = 16.dp, horizontal = 16.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -134,10 +149,16 @@ fun SettingsItem(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            if (value.isNotEmpty()) {
+            if (subtitle != null) {
+                Text(
+                    text = subtitle,
+                    fontSize = 16.sp,
+                    color = Color.Gray
+                )
+            } else if (value.isNotEmpty()) {
                 Text(
                     text = value,
-                    fontSize = 18.sp,
+                    fontSize = 16.sp,
                     color = Color.Gray
                 )
             }

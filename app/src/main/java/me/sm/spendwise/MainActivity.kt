@@ -4,7 +4,7 @@ package me.sm.spendwise
 import ProfileScreen
 import android.app.AlertDialog
 import android.os.Bundle
-import androidx.activity.ComponentActivity
+import androidx.fragment.app.FragmentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.addCallback
@@ -21,6 +21,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.Alignment
+import androidx.compose.material3.CircularProgressIndicator
 
 import me.sm.spendwise.ui.theme.SpendwiseTheme
 import me.sm.spendwise.onboarding.OnboardingScreen
@@ -44,11 +47,107 @@ import me.sm.spendwise.data.SecurityPreference
 import me.sm.spendwise.ui.screens.SecuritySetupScreen
 import me.sm.spendwise.ui.screens.SecurityVerificationScreen
 import me.sm.spendwise.data.SecurityMethod
+import com.google.firebase.auth.FirebaseAuth
+import android.util.Log
 
-class MainActivity : ComponentActivity() {
+class MainActivity : FragmentActivity() {
     private lateinit var themePreference: ThemePreference
     private lateinit var currencyPreference: CurrencyPreference
     private lateinit var securityPreference: SecurityPreference
+
+    @Composable
+    fun MainContent() {
+        var isVerified by remember { mutableStateOf(false) }
+        val context = LocalContext.current
+        val securityPreference = remember { SecurityPreference(context) }
+        var needsVerification by remember { mutableStateOf(false) }
+        var isLoading by remember { mutableStateOf(true) }
+
+        LaunchedEffect(Unit) {
+            securityPreference.getSecurityMethodFlow().collect { method ->
+                needsVerification = method != null && method != SecurityMethod.NONE
+                isLoading = false
+            }
+        }
+
+        if (isLoading) {
+            // Show a loading indicator or splash screen
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
+            }
+            return
+        }
+
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = MaterialTheme.colorScheme.background
+        ) {
+            when {
+                needsVerification && !isVerified -> {
+                    SecurityVerificationScreen(
+                        onVerificationSuccess = {
+                            isVerified = true
+                        }
+                    )
+                }
+                isVerified || !needsVerification -> {
+                    when (AppState.currentScreen) {
+                        Screen.Onboarding -> {
+                            if (AppState.currentUser != null) {
+                                AppState.currentScreen = Screen.Main
+                            } else {
+                                OnboardingScreen(
+                                    onFinish = { AppState.currentScreen = Screen.Login }
+                                )
+                            }
+                        }
+                        Screen.Login -> LoginScreen(
+                            onLoginSuccess = {
+                                AppState.currentScreen = Screen.Main
+                            },
+                            onSignUpClick = { AppState.currentScreen = Screen.SignUp },
+                            onForgotPasswordClick = { AppState.currentScreen = Screen.ForgotPassword }
+                        )
+                        Screen.SignUp -> SignUpScreen(
+                            onSignUpSuccess = { email ->
+                                AppState.verificationEmail = email
+                                AppState.currentScreen = Screen.Verification
+                            },
+                            onLoginClick = { AppState.currentScreen = Screen.Login },
+                            onBackClick = { AppState.currentScreen = Screen.Login }
+                        )
+                        Screen.Verification -> VerificationScreen(
+                            email = AppState.verificationEmail,
+                            onBackClick = { AppState.currentScreen = Screen.SignUp },
+                            onVerificationComplete = {
+                                AppState.currentScreen = Screen.SecuritySetup
+                            }
+                        )
+                        Screen.SecuritySetup -> SecuritySetupScreen(
+                            onSetupComplete = {
+                                AppState.currentScreen = Screen.Main
+                            }
+                        )
+                        Screen.Main -> MainScreen()
+                        Screen.ForgotPassword -> ForgotPasswordScreen(
+                            onBackClick = { AppState.currentScreen = Screen.Login },
+                            onEmailSent = { email ->
+                                AppState.currentScreen = Screen.ForgotPasswordSent
+                                AppState.verificationEmail = email
+                            }
+                        )
+                        Screen.ForgotPasswordSent -> ForgotPasswordSentScreen(
+                            email = AppState.verificationEmail,
+                            onBackToLoginClick = { AppState.currentScreen = Screen.Login }
+                        )
+                    }
+                }
+            }
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -57,7 +156,14 @@ class MainActivity : ComponentActivity() {
         currencyPreference = CurrencyPreference(this)
         securityPreference = SecurityPreference(this)
 
+        // Check if user is already logged in
+        val auth = FirebaseAuth.getInstance()
+        if (auth.currentUser != null) {
+            AppState.currentUser = auth.currentUser
+        }
+
         onBackPressedDispatcher.addCallback(this) {
+            Log.d("MainActivity", "Back pressed, current screen: ${NavigationState.currentScreen}")
             when (NavigationState.currentScreen) {
                 NavScreen.Home -> showExitConfirmationDialog()
                 NavScreen.Settings,
@@ -77,6 +183,10 @@ class MainActivity : ComponentActivity() {
                 NavScreen.ExpenseDetails -> NavigationState.navigateTo(NavScreen.Home)
                 NavScreen.ExpenseCategoryScreen -> NavigationState.navigateTo(NavScreen.Expense)
                 NavScreen.IncomeCategoryScreen -> NavigationState.navigateTo(NavScreen.IncomeScreen)
+                NavScreen.Security -> {
+                    Log.d("MainActivity", "Handling back press in Security screen")
+                    NavigationState.navigateBack()
+                }
                 else -> NavigationState.navigateTo(NavScreen.Home)
             }
         }
@@ -93,69 +203,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    when (AppState.currentScreen) {
-                        Screen.Onboarding -> OnboardingScreen(
-                            onFinish = { AppState.currentScreen = Screen.Login }
-                        )
-                        Screen.Login -> LoginScreen(
-                            onLoginSuccess = {
-                                AppState.currentScreen = Screen.Main
-                            },
-                            onSignUpClick = { AppState.currentScreen = Screen.SignUp },
-                            onForgotPasswordClick = { AppState.currentScreen = Screen.ForgotPassword }
-                        )
-                        Screen.SignUp -> SignUpScreen(
-                            onSignUpSuccess = { email ->
-                                AppState.currentScreen = Screen.Verification
-                                AppState.verificationEmail = email
-                            },
-                            onLoginClick = { AppState.currentScreen = Screen.Login },
-                            onBackClick = { AppState.currentScreen = Screen.Login }
-                        )
-                        Screen.Verification -> VerificationScreen(
-                            email = AppState.verificationEmail,
-                            onBackClick = { AppState.currentScreen = Screen.SignUp },
-                            onVerificationComplete = {
-                                AppState.currentScreen = Screen.Main
-                            }
-                        )
-                        Screen.SecuritySetup -> SecuritySetupScreen(
-                            onSetupComplete = {
-                                AppState.currentScreen = Screen.Main
-                            }
-                        )
-                        Screen.Main -> {
-                            var needsVerification by remember { mutableStateOf(false) }
-
-                            LaunchedEffect(Unit) {
-                                securityPreference.getSecurityMethodFlow().collect { method ->
-                                    needsVerification = method != null && method != SecurityMethod.NONE
-                                }
-                            }
-
-                            if (needsVerification) {
-                                SecurityVerificationScreen(
-                                    onVerificationSuccess = {
-                                        needsVerification = false
-                                    }
-                                )
-                            } else {
-                                MainScreen()
-                            }
-                        }
-                        Screen.ForgotPassword -> ForgotPasswordScreen(
-                            onBackClick = { AppState.currentScreen = Screen.Login },
-                            onEmailSent = { email ->
-                                AppState.currentScreen = Screen.ForgotPasswordSent
-                                AppState.verificationEmail = email
-                            }
-                        )
-                        Screen.ForgotPasswordSent -> ForgotPasswordSentScreen(
-                            email = AppState.verificationEmail,
-                            onBackToLoginClick = { AppState.currentScreen = Screen.Login }
-                        )
-//                        Screen.Main -> MainScreen()
-                    }
+                    MainContent()
                 }
             }
         }
@@ -228,8 +276,7 @@ class MainActivity : ComponentActivity() {
                         onBackPress = { NavigationState.navigateBack() }
                     )
                     NavScreen.Security -> SecurityScreen(
-                        onBackPress = { NavigationState.navigateBack() },
-                        onSecurityMethodSelected = { /* TODO */ }
+                        onBackPress = { NavigationState.navigateBack() }
                     )
                     NavScreen.ManagePayee -> PayeeScreen(
                         payees = payees,

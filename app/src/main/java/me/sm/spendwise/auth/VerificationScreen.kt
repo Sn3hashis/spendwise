@@ -40,6 +40,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.TextStyle
+import me.sm.spendwise.ui.AppState
+import me.sm.spendwise.ui.Screen
 
 @Composable
 fun VerificationScreen(

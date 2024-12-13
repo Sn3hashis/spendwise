@@ -1,5 +1,6 @@
 package me.sm.spendwise.navigation
 
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -30,20 +31,25 @@ enum class Screen {
     Notifications,
     About,
     AddNewPayee,
-    NotificationView
+    NotificationView,
+    SecuritySetup,
+
 }
 
 object NavigationState {
     var currentScreen by mutableStateOf<Screen>(Screen.Home)
+        private set
     var currentExpenseId by mutableStateOf<String?>(null)
     var payeeToEdit by mutableStateOf<Payee?>(null)
     // ... other properties
 
     fun navigateTo(screen: Screen) {
+        Log.d("NavigationState", "Navigating to: $screen from: $currentScreen")
         currentScreen = screen
     }
 
     fun navigateBack() {
+        Log.d("NavigationState", "Navigating back from: $currentScreen")
         currentScreen = when (currentScreen) {
             Screen.Settings -> Screen.Profile
             Screen.ManagePayee -> Screen.Profile
@@ -58,7 +64,8 @@ object NavigationState {
             Screen.IncomeCategoryScreen -> Screen.IncomeScreen
             Screen.ExpenseCategoryScreen -> Screen.ExpenseScreen
             Screen.AddNewPayee -> Screen.ManagePayee
-
+            Screen.SecuritySetup -> Screen.Security
+            Screen.Security -> Screen.Settings
             else -> Screen.Home
         }
     }

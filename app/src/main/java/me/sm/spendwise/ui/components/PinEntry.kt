@@ -19,19 +19,20 @@ fun PinEntry(
     pin: String,
     onPinChange: (String) -> Unit,
     title: String,
+    onResetPin: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(Color(0xFF6C63FF)),
+            .background(MaterialTheme.colorScheme.background),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Spacer(modifier = Modifier.height(64.dp))
 
         Text(
             text = title,
-            color = Color.White,
+            color = MaterialTheme.colorScheme.onBackground,
             fontSize = 24.sp,
             fontWeight = FontWeight.Bold
         )
@@ -48,12 +49,24 @@ fun PinEntry(
                     modifier = Modifier
                         .size(24.dp)
                         .background(
-                            color = if (index < pin.length) Color.White
-                            else Color.White.copy(alpha = 0.3f),
+                            color = if (index < pin.length) 
+                                MaterialTheme.colorScheme.primary
+                            else 
+                                MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
                             shape = CircleShape
                         )
                 )
             }
+        }
+
+        // Reset PIN button
+        TextButton(
+            onClick = onResetPin,
+            colors = ButtonDefaults.textButtonColors(
+                contentColor = MaterialTheme.colorScheme.primary
+            )
+        ) {
+            Text("Reset PIN")
         }
 
         Spacer(modifier = Modifier.weight(1f))
@@ -63,7 +76,8 @@ fun PinEntry(
             modifier = Modifier.padding(bottom = 32.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            (0..9).chunked(3).forEach { row ->
+            // Numbers 1-9
+            (1..9).chunked(3).forEach { row ->
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(32.dp),
                     modifier = Modifier.align(Alignment.CenterHorizontally)
@@ -75,11 +89,13 @@ fun PinEntry(
                                     onPinChange(pin + number)
                                 }
                             },
-                            modifier = Modifier.size(72.dp)
+                            modifier = Modifier.size(72.dp),
+                            colors = ButtonDefaults.textButtonColors(
+                                contentColor = MaterialTheme.colorScheme.onBackground
+                            )
                         ) {
                             Text(
                                 text = number.toString(),
-                                color = Color.White,
                                 fontSize = 32.sp,
                                 fontWeight = FontWeight.Bold
                             )
@@ -88,7 +104,7 @@ fun PinEntry(
                 }
             }
 
-            // Last row with 0 and arrow
+            // Last row with 0 and backspace
             Row(
                 horizontalArrangement = Arrangement.spacedBy(32.dp),
                 modifier = Modifier.align(Alignment.CenterHorizontally)
@@ -99,11 +115,13 @@ fun PinEntry(
                             onPinChange(pin + "0")
                         }
                     },
-                    modifier = Modifier.size(72.dp)
+                    modifier = Modifier.size(72.dp),
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = MaterialTheme.colorScheme.onBackground
+                    )
                 ) {
                     Text(
                         text = "0",
-                        color = Color.White,
                         fontSize = 32.sp,
                         fontWeight = FontWeight.Bold
                     )
@@ -120,7 +138,7 @@ fun PinEntry(
                     Icon(
                         painter = painterResource(id = R.drawable.ic_backspace),
                         contentDescription = "Backspace",
-                        tint = Color.White,
+                        tint = MaterialTheme.colorScheme.onBackground,
                         modifier = Modifier.size(32.dp)
                     )
                 }

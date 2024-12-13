@@ -21,7 +21,7 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -34,6 +34,10 @@ android {
     }
     kotlinOptions {
         jvmTarget = "11"
+        freeCompilerArgs += listOf(
+            "-opt-in=androidx.compose.runtime.ExperimentalComposeApi",
+            "-Xjvm-default=all"
+        )
     }
     buildFeatures {
         compose = true
@@ -93,7 +97,8 @@ dependencies {
     // Add this foundation dependency
     implementation("androidx.compose.foundation:foundation")
     implementation("androidx.compose.foundation:foundation-layout")
-    implementation("androidx.compose.material:material")
+    implementation(libs.androidx.material)
+    implementation (libs.androidx.biometric)
     
     // Testing
     testImplementation("junit:junit:4.13.2")
@@ -103,4 +108,5 @@ dependencies {
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
+    implementation("androidx.fragment:fragment-ktx:1.6.2")
 }

@@ -13,91 +13,272 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-
-enum class SecurityMethod {
-    PIN, FINGERPRINT, FACE_ID
-}
+import android.widget.Toast
+import androidx.compose.ui.platform.LocalContext
+import androidx.fragment.app.FragmentActivity
+import me.sm.spendwise.data.SecurityPreference
+import me.sm.spendwise.utils.BiometricUtils
+import kotlinx.coroutines.launch
+import me.sm.spendwise.data.SecurityMethod
+import androidx.biometric.BiometricManager
+import me.sm.spendwise.ui.components.PinEntry
+import me.sm.spendwise.navigation.NavigationState
+import me.sm.spendwise.navigation.Screen
+import android.util.Log
 
 @Composable
 fun SecurityScreen(
-    onBackPress: () -> Unit,
-    onSecurityMethodSelected: (SecurityMethod) -> Unit
+    onBackPress: () -> Unit
 ) {
-    var selectedMethod by remember { mutableStateOf(SecurityMethod.PIN) }
+    var isLoading by remember { mutableStateOf(true) }
+    var showPinVerification by remember { mutableStateOf(false) }
+    var pin by remember { mutableStateOf("") }
+    val context = LocalContext.current
+    val securityPreference = remember { SecurityPreference(context) }
+    val scope = rememberCoroutineScope()
+    var savedPin by remember { mutableStateOf("") }
+    var selectedMethod by remember { mutableStateOf<SecurityMethod>(SecurityMethod.NONE) }
+    var enrolledMethods by remember { mutableStateOf<Set<SecurityMethod>>(emptySet()) }
+    var methodToVerify by remember { mutableStateOf<SecurityMethod?>(null) }
 
-    Surface(
-        modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .statusBarsPadding()
+    LaunchedEffect(Unit) {
+        Log.d("SecurityScreen", "Starting LaunchedEffect")
+        
+        // Collect all flows in parallel
+        launch {
+            securityPreference.getEnrolledMethodsFlow().collect { methods ->
+                Log.d("SecurityScreen", "Enrolled methods: $methods")
+                enrolledMethods = methods
+            }
+        }
+        
+        launch {
+            securityPreference.getSecurityMethodFlow().collect { method ->
+                Log.d("SecurityScreen", "Current security method: $method")
+                selectedMethod = method ?: SecurityMethod.NONE
+            }
+        }
+        
+        launch {
+            securityPreference.getPin().collect { storedPin ->
+                Log.d("SecurityScreen", "PIN loaded: ${storedPin != null}")
+                savedPin = storedPin ?: ""
+            }
+        }
+
+        isLoading = false
+    }
+
+    if (isLoading) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
         ) {
-            // Top Bar
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 12.dp)
-            ) {
-                IconButton(
-                    onClick = onBackPress,
-                    modifier = Modifier.align(Alignment.CenterStart)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.ArrowBack,
-                        contentDescription = "Back",
-                        modifier = Modifier.size(24.dp)
-                    )
+            CircularProgressIndicator()
+        }
+        return
+    }
+
+    fun handleSecurityMethodSelection(method: SecurityMethod) {
+        Log.d("SecurityScreen", "Method selected: $method")
+        when (method) {
+            SecurityMethod.PIN -> {
+                Log.d("SecurityScreen", "Checking PIN enrollment. Enrolled methods: $enrolledMethods")
+                if (SecurityMethod.PIN in enrolledMethods) {
+                    Log.d("SecurityScreen", "PIN is enrolled, showing verification")
+                    methodToVerify = SecurityMethod.PIN
+                    showPinVerification = true
+                } else {
+                    Log.d("SecurityScreen", "PIN not enrolled, navigating to setup")
+                    scope.launch {
+                        NavigationState.navigateTo(Screen.SecuritySetup)
+                    }
                 }
-                Text(
-                    text = "Security",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.align(Alignment.Center)
+            }
+            SecurityMethod.FINGERPRINT -> {
+                BiometricUtils.showBiometricPrompt(
+                    activity = context as FragmentActivity,
+                    title = "Setup Fingerprint",
+                    subtitle = "Confirm fingerprint to enable fingerprint authentication",
+                    onSuccess = {
+                        scope.launch {
+                            securityPreference.saveSecurityMethod(SecurityMethod.FINGERPRINT)
+                            securityPreference.addEnrolledMethod(SecurityMethod.FINGERPRINT)
+                            selectedMethod = SecurityMethod.FINGERPRINT
+                            Toast.makeText(
+                                context,
+                                "Fingerprint authentication enabled",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    }
                 )
             }
+            SecurityMethod.NONE -> {
+                scope.launch {
+                    securityPreference.saveSecurityMethod(SecurityMethod.NONE)
+                    selectedMethod = SecurityMethod.NONE
+                }
+            }
+        }
+    }
 
-            Divider()
+    DisposableEffect(Unit) {
+        onDispose {
+            Log.d("SecurityScreen", "SecurityScreen disposed")
+        }
+    }
 
-            // Security Options
-            Column(
+    if (showPinVerification) {
+        Log.d("SecurityScreen", "Showing PIN verification UI")
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Text(
+                text = "Verify PIN",
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold
+            )
+            
+            Spacer(modifier = Modifier.height(32.dp))
+            
+            PinEntry(
+                pin = pin,
+                onPinChange = { newPin ->
+                    pin = newPin
+                    if (newPin.length == 4) {
+                        Log.d("SecurityScreen", "PIN entered, length: 4")
+                        if (newPin == savedPin) {
+                            Log.d("SecurityScreen", "PIN verified successfully")
+                            scope.launch {
+                                methodToVerify?.let { method ->
+                                    Log.d("SecurityScreen", "Saving security method: $method")
+                                    securityPreference.saveSecurityMethod(method)
+                                    selectedMethod = method
+                                    showPinVerification = false
+                                    methodToVerify = null
+                                    pin = ""
+                                    Toast.makeText(
+                                        context,
+                                        "PIN selected as security method",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
+                            }
+                        } else {
+                            Log.d("SecurityScreen", "PIN verification failed")
+                            Toast.makeText(
+                                context,
+                                "Incorrect PIN",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                            pin = ""
+                        }
+                    }
+                },
+                title = "Enter your PIN",
                 modifier = Modifier.fillMaxWidth()
+            )
+
+            TextButton(
+                onClick = { 
+                    Log.d("SecurityScreen", "PIN verification cancelled")
+                    showPinVerification = false
+                    methodToVerify = null
+                    pin = ""
+                }
             ) {
-                SecurityOption(
-                    title = "PIN",
-                    isSelected = selectedMethod == SecurityMethod.PIN,
-                    onClick = {
-                        selectedMethod = SecurityMethod.PIN
-                        onSecurityMethodSelected(SecurityMethod.PIN)
+                Text("Cancel")
+            }
+        }
+    } else {
+        Log.d("SecurityScreen", "Showing main security UI")
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = MaterialTheme.colorScheme.background
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .statusBarsPadding()
+            ) {
+                // Top Bar
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 12.dp)
+                ) {
+                    IconButton(
+                        onClick = onBackPress,
+                        modifier = Modifier.align(Alignment.CenterStart)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = "Back"
+                        )
                     }
-                )
-                SecurityOption(
-                    title = "Fingerprint",
-                    isSelected = selectedMethod == SecurityMethod.FINGERPRINT,
-                    onClick = {
-                        selectedMethod = SecurityMethod.FINGERPRINT
-                        onSecurityMethodSelected(SecurityMethod.FINGERPRINT)
+                    Text(
+                        text = "Security",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.align(Alignment.Center)
+                    )
+                }
+
+                Divider()
+
+                // Security Options - Show preferred method first
+                Column(
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    // Show selected method first if it's enrolled
+                    if (selectedMethod != SecurityMethod.NONE && selectedMethod in enrolledMethods) {
+                        SecurityOptionItem(
+                            title = getMethodDisplayName(selectedMethod),
+                            isSelected = true,
+                            isEnrolled = true,
+                            onClick = { handleSecurityMethodSelection(selectedMethod) }
+                        )
                     }
-                )
-                SecurityOption(
-                    title = "Face ID",
-                    isSelected = selectedMethod == SecurityMethod.FACE_ID,
-                    onClick = {
-                        selectedMethod = SecurityMethod.FACE_ID
-                        onSecurityMethodSelected(SecurityMethod.FACE_ID)
-                    }
-                )
+
+                    // Show other enrolled methods
+                    enrolledMethods
+                        .filter { it != selectedMethod }
+                        .forEach { method ->
+                            SecurityOptionItem(
+                                title = getMethodDisplayName(method),
+                                isSelected = method == selectedMethod,
+                                isEnrolled = true,
+                                onClick = { handleSecurityMethodSelection(method) }
+                            )
+                        }
+
+                    // Show remaining methods
+                    SecurityMethod.values()
+                        .filter { it != SecurityMethod.NONE && it !in enrolledMethods }
+                        .forEach { method ->
+                            SecurityOptionItem(
+                                title = getMethodDisplayName(method),
+                                isSelected = method == selectedMethod,
+                                isEnrolled = false,
+                                onClick = { handleSecurityMethodSelection(method) }
+                            )
+                        }
+                }
             }
         }
     }
 }
 
 @Composable
-private fun SecurityOption(
+private fun SecurityOptionItem(
     title: String,
     isSelected: Boolean,
-    onClick: () -> Unit
+    isEnrolled: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Row(
         modifier = Modifier
@@ -107,18 +288,34 @@ private fun SecurityOption(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(
-            text = title,
-            fontSize = 16.sp,
-            color = MaterialTheme.colorScheme.onSurface
-        )
+        Column {
+            Text(
+                text = title,
+                fontSize = 16.sp,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            if (isEnrolled) {
+                Text(
+                    text = "Enrolled",
+                    fontSize = 12.sp,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+        }
         if (isSelected) {
             Icon(
                 imageVector = Icons.Default.Check,
                 contentDescription = "Selected",
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(24.dp)
+                tint = MaterialTheme.colorScheme.primary
             )
         }
+    }
+}
+
+private fun getMethodDisplayName(method: SecurityMethod): String {
+    return when (method) {
+        SecurityMethod.PIN -> "PIN"
+        SecurityMethod.FINGERPRINT -> "Fingerprint"
+        SecurityMethod.NONE -> "None"
     }
 }
