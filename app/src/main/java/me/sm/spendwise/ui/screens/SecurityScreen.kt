@@ -23,7 +23,7 @@ import me.sm.spendwise.data.SecurityMethod
 import androidx.biometric.BiometricManager
 import me.sm.spendwise.ui.components.PinEntry
 import me.sm.spendwise.navigation.NavigationState
-import me.sm.spendwise.navigation.Screen
+import me.sm.spendwise.ui.Screen
 import android.util.Log
 
 @Composable
@@ -40,6 +40,8 @@ fun SecurityScreen(
     var selectedMethod by remember { mutableStateOf<SecurityMethod>(SecurityMethod.NONE) }
     var enrolledMethods by remember { mutableStateOf<Set<SecurityMethod>>(emptySet()) }
     var methodToVerify by remember { mutableStateOf<SecurityMethod?>(null) }
+    var currentSecurityMethod by remember { mutableStateOf<SecurityMethod?>(null) }
+    var hasPinSetup by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         Log.d("SecurityScreen", "Starting LaunchedEffect")
@@ -55,16 +57,20 @@ fun SecurityScreen(
         launch {
             securityPreference.getSecurityMethodFlow().collect { method ->
                 Log.d("SecurityScreen", "Current security method: $method")
-                selectedMethod = method ?: SecurityMethod.NONE
+                currentSecurityMethod = method
             }
         }
         
         launch {
-            securityPreference.getPin().collect { storedPin ->
+            securityPreference.loadPin().collect { storedPin ->
                 Log.d("SecurityScreen", "PIN loaded: ${storedPin != null}")
                 savedPin = storedPin ?: ""
             }
         }
+
+        // Check if PIN is set up in Firebase
+        hasPinSetup = securityPreference.hasPinSetup()
+        Log.d("SecurityScreen", "PIN setup check: $hasPinSetup")
 
         isLoading = false
     }
@@ -83,16 +89,13 @@ fun SecurityScreen(
         Log.d("SecurityScreen", "Method selected: $method")
         when (method) {
             SecurityMethod.PIN -> {
-                Log.d("SecurityScreen", "Checking PIN enrollment. Enrolled methods: $enrolledMethods")
-                if (SecurityMethod.PIN in enrolledMethods) {
-                    Log.d("SecurityScreen", "PIN is enrolled, showing verification")
-                    methodToVerify = SecurityMethod.PIN
+                if (hasPinSetup) {
+                    Log.d("SecurityScreen", "PIN is set up, showing verification")
                     showPinVerification = true
+                    methodToVerify = method
                 } else {
                     Log.d("SecurityScreen", "PIN not enrolled, navigating to setup")
-                    scope.launch {
-                        NavigationState.navigateTo(Screen.SecuritySetup)
-                    }
+                    NavigationState.navigateTo(Screen.SecuritySetup)
                 }
             }
             SecurityMethod.FINGERPRINT -> {
@@ -149,13 +152,14 @@ fun SecurityScreen(
                 onPinChange = { newPin ->
                     pin = newPin
                     if (newPin.length == 4) {
-                        Log.d("SecurityScreen", "PIN entered, length: 4")
+                        Log.d("SecurityScreen", "Verifying PIN: $newPin with saved PIN: $savedPin")
                         if (newPin == savedPin) {
                             Log.d("SecurityScreen", "PIN verified successfully")
                             scope.launch {
                                 methodToVerify?.let { method ->
-                                    Log.d("SecurityScreen", "Saving security method: $method")
+                                    Log.d("SecurityScreen", "Setting security method to: $method")
                                     securityPreference.saveSecurityMethod(method)
+                                    securityPreference.addEnrolledMethod(method)
                                     selectedMethod = method
                                     showPinVerification = false
                                     methodToVerify = null
@@ -178,9 +182,10 @@ fun SecurityScreen(
                         }
                     }
                 },
-                title = "Enter your PIN",
-                modifier = Modifier.fillMaxWidth()
+                title = "Enter your PIN"
             )
+
+            Spacer(modifier = Modifier.height(16.dp))
 
             TextButton(
                 onClick = { 

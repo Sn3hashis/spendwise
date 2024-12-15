@@ -5,36 +5,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import me.sm.spendwise.data.Payee
-
-enum class Screen {
-    Home,
-    Expense,
-    Income,
-    Profile,
-    Settings,
-    Currency,
-    Theme,
-    Login,
-    ExpenseDetails,
-    AttachmentOptions,
-    TransactionFilter,
-    ExpenseScreen,
-    IncomeScreen,
-    ExpenseCategoryScreen,
-    IncomeCategoryScreen,
-    Language,
-    Transfer,
-    Transaction,
-    Budget,
-    ManagePayee,
-    Security,
-    Notifications,
-    About,
-    AddNewPayee,
-    NotificationView,
-    SecuritySetup,
-
-}
+import me.sm.spendwise.ui.Screen
 
 object NavigationState {
     var currentScreen by mutableStateOf<Screen>(Screen.Home)
@@ -61,8 +32,8 @@ object NavigationState {
             Screen.ExpenseDetails, Screen.AttachmentOptions -> Screen.Expense
             Screen.TransactionFilter -> Screen.Home
             Screen.NotificationView -> Screen.Home
-            Screen.IncomeCategoryScreen -> Screen.IncomeScreen
-            Screen.ExpenseCategoryScreen -> Screen.ExpenseScreen
+            Screen.IncomeCategoryScreen -> Screen.Income
+            Screen.ExpenseCategoryScreen -> Screen.Expense
             Screen.AddNewPayee -> Screen.ManagePayee
             Screen.SecuritySetup -> Screen.Security
             Screen.Security -> Screen.Settings

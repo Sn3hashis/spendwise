@@ -47,6 +47,7 @@ import androidx.compose.foundation.clickable
 import android.util.Log
 import androidx.compose.foundation.Image
 import kotlinx.coroutines.tasks.await
+import com.google.firebase.auth.FirebaseUser
 
 @Composable
 fun LoginScreen(
@@ -61,123 +62,74 @@ fun LoginScreen(
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
     val context = LocalContext.current
-    val securityPreference = remember { SecurityPreference(context) }
-    val auth = remember { FirebaseAuth.getInstance() }
-    val googleSignInClient = remember { getGoogleSignInClient(context) }
-
+    val auth = FirebaseAuth.getInstance()
     val scope = rememberCoroutineScope()
+    val googleSignInClient = remember { getGoogleSignInClient(context) }
+    val securityPreference = remember { SecurityPreference(context) }
 
-    val googleAuthUiClient by remember {
-        mutableStateOf(
-            GoogleAuthUiClient(
-                context = context,
-                oneTapClient = Identity.getSignInClient(context)
-            )
-        )
+    // Define handleLoginSuccess before using it
+    fun handleLoginSuccess(user: FirebaseUser) {
+        scope.launch {
+            try {
+                AppState.currentUser = user
+                // Sync security settings from Firebase
+                securityPreference.syncWithFirebase()
+                
+                // Check if PIN exists
+                if (securityPreference.hasPinSetup()) {
+                    AppState.currentScreen = Screen.SecurityVerification
+                } else {
+                    onLoginSuccess()
+                }
+            } catch (e: Exception) {
+                Log.e("LoginScreen", "Error syncing security settings", e)
+                onLoginSuccess()
+            }
+        }
     }
 
-    val authManager = remember { FirebaseAuthManager(context) }
-
-    val TAG = "LoginScreen"
-
-    val launcher = rememberLauncherForActivityResult(
-        contract = StartIntentSenderForResult(),
-        onResult = { result ->
-            Log.d(TAG, "Got activity result: ${result.resultCode}")
-            Toast.makeText(
-                context,
-                "Processing sign-in result...",
-                Toast.LENGTH_SHORT
-            ).show()
-            
-            if(result.resultCode == Activity.RESULT_OK) {
+    // Google Sign In launcher
+    val googleSignInLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
+            try {
+                val account = task.getResult(ApiException::class.java)
+                val credential = GoogleAuthProvider.getCredential(account.idToken, null)
                 scope.launch {
                     try {
-                        Log.d(TAG, "Processing sign-in result")
-                        val signInResult = googleAuthUiClient.signInWithIntent(
-                            intent = result.data ?: return@launch
-                        )
-                        Log.d(TAG, "Sign in result: $signInResult")
-                        if (signInResult.data != null) {
-                            AppState.currentUser = auth.currentUser
-                            AppState.currentScreen = Screen.Main
-                            Toast.makeText(
-                                context,
-                                "Sign in successful, redirecting...",
-                                Toast.LENGTH_SHORT
-                            ).show()
-                            onLoginSuccess()
-                        } else {
-                            Log.e(TAG, "Sign in failed: ${signInResult.errorMessage}")
-                            Toast.makeText(
-                                context,
-                                "Sign in failed: ${signInResult.errorMessage}",
-                                Toast.LENGTH_LONG
-                            ).show()
+                        isLoading = true
+                        val authResult = auth.signInWithCredential(credential).await()
+                        authResult.user?.let { user ->
+                            handleLoginSuccess(user)
                         }
                     } catch (e: Exception) {
-                        Log.e(TAG, "Error during sign in", e)
+                        errorMessage = e.message
                         Toast.makeText(
                             context,
-                            "Sign in error: ${e.message}",
+                            "Google Sign In failed: ${e.message}",
                             Toast.LENGTH_LONG
                         ).show()
+                    } finally {
+                        isLoading = false
                     }
                 }
-            } else {
-                Log.d(TAG, "Sign in cancelled or failed: ${result.resultCode}")
+            } catch (e: ApiException) {
+                errorMessage = "Google Sign In failed: ${e.message}"
                 Toast.makeText(
                     context,
-                    "Sign in cancelled",
-                    Toast.LENGTH_SHORT
+                    errorMessage,
+                    Toast.LENGTH_LONG
                 ).show()
             }
         }
-    )
-
-    val googleSignInLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.StartActivityForResult(),
-        onResult = { result ->
-            if (result.resultCode == Activity.RESULT_OK) {
-                val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
-                try {
-                    val account = task.getResult(ApiException::class.java)
-                    val credential = GoogleAuthProvider.getCredential(account.idToken, null)
-                    scope.launch {
-                        try {
-                            val authResult = auth.signInWithCredential(credential).await()
-                            val user = authResult.user
-                            if (user != null) {
-                                AppState.currentUser = user
-                                AppState.currentScreen = Screen.Main
-                                onLoginSuccess()
-                            }
-                        } catch (e: Exception) {
-                            Log.e(TAG, "Firebase auth failed", e)
-                            Toast.makeText(
-                                context,
-                                "Authentication failed: ${e.message}",
-                                Toast.LENGTH_LONG
-                            ).show()
-                        }
-                    }
-                } catch (e: ApiException) {
-                    Log.e(TAG, "Google sign in failed", e)
-                    Toast.makeText(
-                        context,
-                        "Google sign in failed: ${e.message}",
-                        Toast.LENGTH_LONG
-                    ).show()
-                }
-            }
-        }
-    )
+    }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .padding(horizontal = 24.dp),
+            .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         // Welcome text with subtitle
@@ -274,27 +226,34 @@ fun LoginScreen(
         // Sign In button
         Button(
             onClick = {
-                scope.launch {
+                if (email.isNotBlank() && password.isNotBlank()) {
                     isLoading = true
-                    try {
-                        val result = authManager.signInWithEmailAndPassword(email, password)
-                        if (result.data != null) {
-                            onLoginSuccess()
-                        } else {
-                            errorMessage = result.errorMessage
+                    errorMessage = null
+                    
+                    scope.launch {
+                        try {
+                            val result = auth.signInWithEmailAndPassword(email, password).await()
+                            result.user?.let { user ->
+                                handleLoginSuccess(user)
+                            }
+                        } catch (e: Exception) {
+                            isLoading = false
+                            errorMessage = e.message
+                            Toast.makeText(
+                                context,
+                                "Error: ${e.message}",
+                                Toast.LENGTH_LONG
+                            ).show()
                         }
-                    } catch (e: Exception) {
-                        errorMessage = e.message
-                    } finally {
-                        isLoading = false
                     }
+                } else {
+                    errorMessage = "Please enter email and password"
                 }
             },
+            enabled = !isLoading && email.isNotBlank() && password.isNotBlank(),
             modifier = Modifier
                 .fillMaxWidth()
-                .height(56.dp),
-            shape = RoundedCornerShape(32.dp),
-            enabled = !isLoading && email.isNotEmpty() && password.isNotEmpty()
+                .height(56.dp)
         ) {
             if (isLoading) {
                 CircularProgressIndicator(
@@ -302,11 +261,16 @@ fun LoginScreen(
                     color = MaterialTheme.colorScheme.onPrimary
                 )
             } else {
-                Text(
-                    text = "Login",
-                    fontSize = 16.sp
-                )
+                Text("Login")
             }
+        }
+
+        if (errorMessage != null) {
+            Text(
+                text = errorMessage!!,
+                color = MaterialTheme.colorScheme.error,
+                modifier = Modifier.padding(top = 8.dp)
+            )
         }
 
         // Or with divider
@@ -328,14 +292,8 @@ fun LoginScreen(
         // Google Sign In button
         OutlinedButton(
             onClick = {
-                scope.launch {
-                    val signInIntentSender = googleAuthUiClient.signIn()
-                    launcher.launch(
-                        IntentSenderRequest.Builder(
-                            signInIntentSender ?: return@launch
-                        ).build()
-                    )
-                }
+                val signInIntent = googleSignInClient.signInIntent
+                googleSignInLauncher.launch(signInIntent)
             },
             modifier = Modifier
                 .fillMaxWidth()

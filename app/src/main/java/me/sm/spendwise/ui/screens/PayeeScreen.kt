@@ -20,7 +20,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.rememberAsyncImagePainter
 import me.sm.spendwise.navigation.NavigationState
-import me.sm.spendwise.navigation.Screen
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.shape.CircleShape
@@ -29,7 +28,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Divider
 import androidx.compose.ui.res.painterResource
 import me.sm.spendwise.R
-import me.sm.spendwise.navigation.Screen as NavScreen
+import me.sm.spendwise.ui.Screen
 
 import android.widget.Toast
 import androidx.compose.ui.platform.LocalContext

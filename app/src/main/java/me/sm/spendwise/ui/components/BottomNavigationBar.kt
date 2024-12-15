@@ -16,7 +16,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import me.sm.spendwise.R
 import me.sm.spendwise.navigation.NavigationState
-import me.sm.spendwise.navigation.Screen as NavScreen
+import me.sm.spendwise.ui.Screen
 
 @Composable
 fun BottomNavigationBar() {
@@ -49,14 +49,14 @@ fun BottomNavigationBar() {
                     NavBarItemWithLabel(
                         icon = R.drawable.ic_home,
                         label = "Home",
-                        isSelected = NavigationState.currentScreen == NavScreen.Home,
-                        onClick = { NavigationState.navigateTo(NavScreen.Home) }
+                        isSelected = NavigationState.currentScreen == Screen.Home,
+                        onClick = { NavigationState.navigateTo(Screen.Home) }
                     )
                     NavBarItemWithLabel(
                         icon = R.drawable.ic_transaction,
                         label = "Transactions",
-                        isSelected = NavigationState.currentScreen == NavScreen.Transaction,
-                        onClick = { NavigationState.navigateTo(NavScreen.Transaction) }
+                        isSelected = NavigationState.currentScreen == Screen.Transaction,
+                        onClick = { NavigationState.navigateTo(Screen.Transaction) }
                     )
                     // Plus button without label
                     NavBarItem(
@@ -68,14 +68,14 @@ fun BottomNavigationBar() {
                     NavBarItemWithLabel(
                         icon = R.drawable.ic_budget,
                         label = "Budget",
-                        isSelected = NavigationState.currentScreen == NavScreen.Budget,
-                        onClick = { NavigationState.navigateTo(NavScreen.Budget) }
+                        isSelected = NavigationState.currentScreen == Screen.Budget,
+                        onClick = { NavigationState.navigateTo(Screen.Budget) }
                     )
                     NavBarItemWithLabel(
                         icon = R.drawable.ic_profile,
                         label = "Profile",
-                        isSelected = NavigationState.currentScreen == NavScreen.Profile,
-                        onClick = { NavigationState.navigateTo(NavScreen.Profile) }
+                        isSelected = NavigationState.currentScreen == Screen.Profile,
+                        onClick = { NavigationState.navigateTo(Screen.Profile) }
                     )
                 }
             }
@@ -173,7 +173,7 @@ private fun PopupMenu(onDismiss: () -> Unit) {
                     text = "Expense",
                     backgroundColor = MaterialTheme.colorScheme.errorContainer,
                     onClick = {
-                        NavigationState.navigateTo(NavScreen.Expense)
+                        NavigationState.navigateTo(Screen.Expense)
                         onDismiss()
                     }
                 )
@@ -183,7 +183,7 @@ private fun PopupMenu(onDismiss: () -> Unit) {
                     text = "Income", 
                     backgroundColor = MaterialTheme.colorScheme.tertiaryContainer,
                     onClick = {
-                        NavigationState.navigateTo(NavScreen.Income)
+                        NavigationState.navigateTo(Screen.Income)
                         onDismiss()
                     }
                 )
@@ -193,7 +193,7 @@ private fun PopupMenu(onDismiss: () -> Unit) {
                     text = "Transfer",
                     backgroundColor = MaterialTheme.colorScheme.primaryContainer,
                     onClick = {
-                        NavigationState.navigateTo(NavScreen.Transfer)
+                        NavigationState.navigateTo(Screen.Transfer)
                         onDismiss()
                     }
                 )

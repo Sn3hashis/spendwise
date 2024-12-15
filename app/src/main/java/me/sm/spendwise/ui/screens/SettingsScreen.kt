@@ -20,7 +20,7 @@ import me.sm.spendwise.data.SecurityMethod
 import me.sm.spendwise.data.SecurityPreference
 import me.sm.spendwise.data.ThemePreference
 import me.sm.spendwise.navigation.NavigationState
-import me.sm.spendwise.navigation.Screen
+import me.sm.spendwise.ui.Screen
 
 @Composable
 fun SettingsScreen(

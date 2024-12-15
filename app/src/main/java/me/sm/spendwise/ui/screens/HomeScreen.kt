@@ -26,7 +26,7 @@ import me.sm.spendwise.data.NotificationManager
 import me.sm.spendwise.data.TransactionManager
 import me.sm.spendwise.navigation.NavigationState
 
-import me.sm.spendwise.navigation.Screen as NavScreen
+import me.sm.spendwise.ui.Screen
 import me.sm.spendwise.ui.components.TransactionItem
 import me.sm.spendwise.ui.AppState
 
@@ -78,7 +78,7 @@ private fun TopBar() {
                 .size(48.dp)
                 .clip(CircleShape)
                 .background(MaterialTheme.colorScheme.surface)
-                .clickable { NavigationState.navigateTo(NavScreen.Profile) }
+                .clickable { NavigationState.navigateTo(Screen.Profile) }
         ) {
             AsyncImage(
                 model = AppState.currentUser?.photoUrl ?: R.drawable.profile_placeholder,
@@ -107,7 +107,7 @@ private fun TopBar() {
         // Notification Icon
         Box {
             IconButton(
-                onClick = { NavigationState.navigateTo(NavScreen.NotificationView) },
+                onClick = { NavigationState.navigateTo(Screen.NotificationView) },
                 modifier = Modifier
                     .size(48.dp)
                     .background(
@@ -309,7 +309,7 @@ private fun RecentTransactions(onTransactionClick: (String) -> Unit) {
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold
             )
-            TextButton(onClick = { NavigationState.navigateTo(NavScreen.Transaction) }) {
+            TextButton(onClick = { NavigationState.navigateTo(Screen.Transaction) }) {
                 Text("See All")
             }
         }

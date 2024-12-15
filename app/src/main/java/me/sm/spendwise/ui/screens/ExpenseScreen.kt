@@ -49,13 +49,14 @@ import android.view.HapticFeedbackConstants
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.platform.LocalView
 import android.net.Uri
-import me.sm.spendwise.navigation.Screen as NavScreen
+import me.sm.spendwise.ui.Screen
 import me.sm.spendwise.data.CurrencyState
 import me.sm.spendwise.data.NotificationManager
 import me.sm.spendwise.data.Transaction
 import me.sm.spendwise.data.TransactionManager
 
 import me.sm.spendwise.utils.*
+
 @Composable
 fun ExpenseScreen(
     onBackPress: () -> Unit
@@ -410,7 +411,7 @@ TransactionManager.addTransaction(
                                     "${CurrencyState.currentCurrency} ${amount} expense saved", 
                                     Toast.LENGTH_SHORT
                                 ).show()
-                                NavigationState.navigateTo(NavScreen.Home)
+                                NavigationState.navigateTo(Screen.Home)
                             }
 
                         },

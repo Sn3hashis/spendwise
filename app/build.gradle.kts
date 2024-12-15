@@ -61,6 +61,7 @@ android {
 }
 
 dependencies {
+    implementation("com.google.firebase:firebase-database-ktx")
     val composeBom = platform("androidx.compose:compose-bom:2024.02.00")
     implementation(composeBom)
     
@@ -93,7 +94,7 @@ dependencies {
     implementation("androidx.datastore:datastore-preferences:1.0.0")
     implementation("androidx.datastore:datastore-preferences-core:1.0.0")
     implementation("com.google.android.gms:play-services-auth:20.7.0")
-    
+
     // Add this foundation dependency
     implementation("androidx.compose.foundation:foundation")
     implementation("androidx.compose.foundation:foundation-layout")
@@ -109,4 +110,8 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
     implementation("androidx.fragment:fragment-ktx:1.6.2")
+
+    // Add these if not already present
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
 }

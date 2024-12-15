@@ -21,7 +21,7 @@ import androidx.compose.ui.unit.sp
 import me.sm.spendwise.R
 import me.sm.spendwise.data.Payee
 import me.sm.spendwise.navigation.NavigationState
-import me.sm.spendwise.navigation.Screen as NavScreen
+import me.sm.spendwise.ui.Screen
 
 @Composable
 fun PayeeListScreen(
@@ -59,7 +59,7 @@ fun PayeeListScreen(
 
         // Manage Payees Button
         Button(
-            onClick = { NavigationState.navigateTo(NavScreen.ManagePayee) },
+            onClick = { NavigationState.navigateTo(Screen.AddNewPayee) },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp)

@@ -28,10 +28,6 @@ fun SecuritySetupScreen(
     val securityPreference = remember { SecurityPreference(context) }
     val scope = rememberCoroutineScope()
 
-    LaunchedEffect(Unit) {
-        Log.d("SecuritySetupScreen", "Starting setup")
-    }
-
     Column(
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -59,46 +55,20 @@ fun SecuritySetupScreen(
                         if (newPin == pin) {
                             scope.launch {
                                 try {
-                                    Log.d("SecuritySetupScreen", "Saving PIN: $pin")
-                                    // Save the PIN first
+                                    // Save PIN
                                     securityPreference.savePin(pin)
                                     // Add PIN to enrolled methods
                                     securityPreference.addEnrolledMethod(SecurityMethod.PIN)
                                     // Set PIN as current security method
                                     securityPreference.saveSecurityMethod(SecurityMethod.PIN)
                                     
-                                    // Verify the PIN was saved using first()
-                                    val storedPin = securityPreference.getPin().first() ?: ""
-                                    Log.d("SecuritySetupScreen", "Verifying saved PIN: $storedPin")
-                                    
-                                    if (storedPin == pin) {
-                                        Log.d("SecuritySetupScreen", "PIN verified successfully")
-                                        Toast.makeText(
-                                            context,
-                                            "PIN setup successful",
-                                            Toast.LENGTH_SHORT
-                                        ).show()
-                                        onSetupComplete()
-                                    } else {
-                                        Log.e("SecuritySetupScreen", "PIN verification failed")
-                                        Toast.makeText(
-                                            context,
-                                            "Error setting up PIN. Please try again.",
-                                            Toast.LENGTH_SHORT
-                                        ).show()
-                                        // Reset the state
-                                        pin = ""
-                                        confirmPin = ""
-                                        stage = 0
-                                    }
+                                    onSetupComplete()
                                 } catch (e: Exception) {
-                                    Log.e("SecuritySetupScreen", "Error saving PIN", e)
                                     Toast.makeText(
                                         context,
                                         "Error setting up PIN. Please try again.",
                                         Toast.LENGTH_SHORT
                                     ).show()
-                                    // Reset the state
                                     pin = ""
                                     confirmPin = ""
                                     stage = 0
@@ -117,8 +87,7 @@ fun SecuritySetupScreen(
                     }
                 }
             },
-            title = if (stage == 0) "Enter new PIN" else "Confirm PIN",
-            modifier = Modifier.fillMaxWidth()
+            title = if (stage == 0) "Enter new PIN" else "Confirm PIN"
         )
     }
 }

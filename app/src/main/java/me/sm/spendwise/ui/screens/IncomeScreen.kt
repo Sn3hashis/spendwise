@@ -35,7 +35,7 @@ import me.sm.spendwise.R
 import me.sm.spendwise.navigation.NavigationState
 import androidx.compose.runtime.saveable.rememberSaveable
 import android.net.Uri
-import me.sm.spendwise.navigation.Screen as NavScreen
+import me.sm.spendwise.ui.Screen as NavScreen
 import me.sm.spendwise.data.CurrencyState
 import me.sm.spendwise.data.NotificationManager
 import me.sm.spendwise.data.Transaction
