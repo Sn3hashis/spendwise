@@ -25,6 +25,7 @@ import me.sm.spendwise.ui.components.PinEntry
 import me.sm.spendwise.navigation.NavigationState
 import me.sm.spendwise.ui.Screen
 import android.util.Log
+import androidx.biometric.BiometricPrompt
 
 @Composable
 fun SecurityScreen(
@@ -37,16 +38,22 @@ fun SecurityScreen(
     val securityPreference = remember { SecurityPreference(context) }
     val scope = rememberCoroutineScope()
     var savedPin by remember { mutableStateOf("") }
-    var selectedMethod by remember { mutableStateOf<SecurityMethod>(SecurityMethod.NONE) }
+    var selectedMethod by remember { mutableStateOf(SecurityMethod.NONE) }
     var enrolledMethods by remember { mutableStateOf<Set<SecurityMethod>>(emptySet()) }
     var methodToVerify by remember { mutableStateOf<SecurityMethod?>(null) }
-    var currentSecurityMethod by remember { mutableStateOf<SecurityMethod?>(null) }
+    var currentSecurityMethod by remember { mutableStateOf(SecurityMethod.PIN) }
     var hasPinSetup by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         Log.d("SecurityScreen", "Starting LaunchedEffect")
         
-        // Collect all flows in parallel
+        // Get current security method first and set it as selected
+        val method = securityPreference.getCurrentSecurityMethod()
+        currentSecurityMethod = method
+        selectedMethod = method
+        Log.d("SecurityScreen", "Initial security method: $method")
+        
+        // Then collect enrolled methods
         launch {
             securityPreference.getEnrolledMethodsFlow().collect { methods ->
                 Log.d("SecurityScreen", "Enrolled methods: $methods")
@@ -54,23 +61,16 @@ fun SecurityScreen(
             }
         }
         
-        launch {
-            securityPreference.getSecurityMethodFlow().collect { method ->
-                Log.d("SecurityScreen", "Current security method: $method")
-                currentSecurityMethod = method
-            }
-        }
-        
+        // Load PIN without changing security method
         launch {
             securityPreference.loadPin().collect { storedPin ->
                 Log.d("SecurityScreen", "PIN loaded: ${storedPin != null}")
                 savedPin = storedPin ?: ""
+                if (storedPin != null) {
+                    hasPinSetup = true
+                }
             }
         }
-
-        // Check if PIN is set up in Firebase
-        hasPinSetup = securityPreference.hasPinSetup()
-        Log.d("SecurityScreen", "PIN setup check: $hasPinSetup")
 
         isLoading = false
     }
@@ -101,19 +101,29 @@ fun SecurityScreen(
             SecurityMethod.FINGERPRINT -> {
                 BiometricUtils.showBiometricPrompt(
                     activity = context as FragmentActivity,
-                    title = "Setup Fingerprint",
-                    subtitle = "Confirm fingerprint to enable fingerprint authentication",
                     onSuccess = {
                         scope.launch {
                             securityPreference.saveSecurityMethod(SecurityMethod.FINGERPRINT)
-                            securityPreference.addEnrolledMethod(SecurityMethod.FINGERPRINT)
                             selectedMethod = SecurityMethod.FINGERPRINT
+                            currentSecurityMethod = SecurityMethod.FINGERPRINT
                             Toast.makeText(
                                 context,
                                 "Fingerprint authentication enabled",
                                 Toast.LENGTH_SHORT
                             ).show()
                         }
+                    },
+                    onError = { errorCode, _ ->
+                        if (errorCode == BiometricPrompt.ERROR_CANCELED) {
+                            // User canceled, revert selection
+                            selectedMethod = SecurityMethod.PIN
+                            currentSecurityMethod = SecurityMethod.PIN
+                        }
+                        Toast.makeText(
+                            context,
+                            "Fingerprint setup failed",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
                 )
             }
@@ -121,6 +131,7 @@ fun SecurityScreen(
                 scope.launch {
                     securityPreference.saveSecurityMethod(SecurityMethod.NONE)
                     selectedMethod = SecurityMethod.NONE
+                    currentSecurityMethod = SecurityMethod.NONE
                 }
             }
         }
@@ -308,10 +319,12 @@ private fun SecurityOptionItem(
             }
         }
         if (isSelected) {
-            Icon(
-                imageVector = Icons.Default.Check,
-                contentDescription = "Selected",
-                tint = MaterialTheme.colorScheme.primary
+            Checkbox(
+                checked = true,
+                onCheckedChange = null, // Read-only checkbox
+                colors = CheckboxDefaults.colors(
+                    checkedColor = MaterialTheme.colorScheme.primary
+                )
             )
         }
     }

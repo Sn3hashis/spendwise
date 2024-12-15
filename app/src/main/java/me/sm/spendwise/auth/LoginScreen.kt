@@ -79,11 +79,13 @@ fun LoginScreen(
                 if (securityPreference.hasPinSetup()) {
                     AppState.currentScreen = Screen.SecurityVerification
                 } else {
-                    onLoginSuccess()
+                    // No PIN set up, show PIN setup screen
+                    AppState.currentScreen = Screen.SecuritySetup
                 }
             } catch (e: Exception) {
                 Log.e("LoginScreen", "Error syncing security settings", e)
-                onLoginSuccess()
+                // Even if sync fails, show PIN setup
+                AppState.currentScreen = Screen.SecuritySetup
             }
         }
     }

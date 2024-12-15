@@ -38,6 +38,8 @@ import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Icon
 import kotlinx.coroutines.launch
+import android.util.Log
+import android.widget.Toast
 
 @Composable
 fun ProfileScreen() {
@@ -67,7 +69,17 @@ fun ProfileScreen() {
             confirmButton = {
                 TextButton(onClick = {
                     scope.launch {
-                        AppState.logout(context)
+                        try {
+                            AppState.logout(context)
+                            NavigationState.navigateTo(Screen.Login)
+                        } catch (e: Exception) {
+                            Log.e("ProfileScreen", "Error during logout", e)
+                            Toast.makeText(
+                                context,
+                                "Error logging out. Please try again.",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
                     }
                     showLogoutDialog.value = false
                 }) {

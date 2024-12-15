@@ -51,6 +51,10 @@ import android.util.Log
 
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+
+import kotlinx.coroutines.cancel
 
 
 class MainActivity : FragmentActivity() {
@@ -58,27 +62,57 @@ class MainActivity : FragmentActivity() {
     private lateinit var currencyPreference: CurrencyPreference
     private lateinit var securityPreference: SecurityPreference
 
+    private val activityScope = CoroutineScope(Dispatchers.Main + Job())
+
+    @OptIn(ExperimentalAnimationApi::class)
     @Composable
     fun MainContent() {
-        var needsPinSetup by remember { mutableStateOf(false) }
         var needsPinValidation by remember { mutableStateOf(false) }
+        var needsPinSetup by remember { mutableStateOf(false) }
+        var needsSecurityValidation by remember { mutableStateOf(false) }
+        var isLoading by remember { mutableStateOf(true) }
         val context = LocalContext.current
         val securityPreference = remember { SecurityPreference(context) }
         val scope = rememberCoroutineScope()
+        val payees = remember { mutableStateListOf<Payee>() }
 
         LaunchedEffect(Unit) {
             val user = FirebaseAuth.getInstance().currentUser
             if (user != null) {
                 AppState.currentUser = user
-                
-                // Sync with Firebase first
-                securityPreference.syncWithFirebase()
-                
-                // Then check if PIN exists
-                val hasPinSetup = securityPreference.hasPinSetup()
-                needsPinSetup = !hasPinSetup
-                needsPinValidation = hasPinSetup
+                try {
+                    // Initialize security method first
+                    securityPreference.initializeSecurityMethod()
+                    
+                    // Then check security setup status
+                    val currentMethod = securityPreference.getCurrentSecurityMethod()
+                    when {
+                        currentMethod == SecurityMethod.FINGERPRINT -> {
+                            needsSecurityValidation = true
+                            needsPinSetup = false
+                            needsPinValidation = false
+                        }
+                        !securityPreference.hasPinSetup() -> {
+                            needsPinSetup = true
+                            needsPinValidation = false
+                            needsSecurityValidation = false
+                        }
+                        else -> {
+                            needsPinValidation = true
+                            needsPinSetup = false
+                            needsSecurityValidation = false
+                        }
+                    }
+                } catch (e: Exception) {
+                    Log.e("MainActivity", "Error initializing security", e)
+                    needsPinValidation = true
+                    needsPinSetup = false
+                    needsSecurityValidation = false
+                }
+            } else {
+                AppState.currentScreen = Screen.Login
             }
+            isLoading = false
         }
 
         Surface(
@@ -86,101 +120,162 @@ class MainActivity : FragmentActivity() {
             color = MaterialTheme.colorScheme.background
         ) {
             when {
+                isLoading -> {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator()
+                    }
+                }
                 needsPinSetup -> {
                     SecuritySetupScreen(
                         onSetupComplete = {
                             needsPinSetup = false
-                            AppState.currentScreen = Screen.Main
+                            needsPinValidation = false
+                            needsSecurityValidation = false
+                            NavigationState.navigateTo(Screen.Home)
                         }
                     )
                 }
-                needsPinValidation -> {
+                needsSecurityValidation || needsPinValidation -> {
                     SecurityVerificationScreen(
                         onVerificationSuccess = {
                             needsPinValidation = false
-                            AppState.currentScreen = Screen.Main
+                            needsSecurityValidation = false
+                            NavigationState.navigateTo(Screen.Home)
                         }
                     )
                 }
-                else -> {
+                AppState.currentUser == null -> {
                     when (AppState.currentScreen) {
-                        Screen.Onboarding -> {
-                            if (AppState.currentUser != null) {
-                                AppState.currentScreen = Screen.Main
-                            } else {
-                                OnboardingScreen(
-                                    onFinish = { AppState.currentScreen = Screen.Login }
-                                )
-                            }
-                        }
+                        Screen.Onboarding -> OnboardingScreen(
+                            onFinish = { AppState.currentScreen = Screen.Login }
+                        )
                         Screen.Login -> LoginScreen(
-                            onLoginSuccess = { AppState.currentScreen = Screen.Main },
+                            onLoginSuccess = { /* handled in LoginScreen */ },
                             onSignUpClick = { AppState.currentScreen = Screen.SignUp },
                             onForgotPasswordClick = { AppState.currentScreen = Screen.ForgotPassword }
                         )
                         Screen.SignUp -> SignUpScreen(
-                            onSignUpSuccess = { email ->
-                                AppState.verificationEmail = email
-                                AppState.currentScreen = Screen.Verification
-                            },
+                            onSignUpSuccess = { /* handled in SignUpScreen */ },
                             onLoginClick = { AppState.currentScreen = Screen.Login },
-                            onBackClick = { AppState.currentScreen = Screen.Login }
-                        )
-                        Screen.Verification -> VerificationScreen(
-                            email = AppState.verificationEmail,
-                            onBackClick = { AppState.currentScreen = Screen.SignUp },
-                            onVerificationComplete = {
-                                AppState.currentScreen = Screen.SecuritySetup
-                            }
-                        )
-                        Screen.SecuritySetup -> SecuritySetupScreen(
-                            onSetupComplete = {
-                                AppState.currentScreen = Screen.Main
-                            }
+                            onBackClick = TODO()
                         )
                         Screen.ForgotPassword -> ForgotPasswordScreen(
-                            onBackClick = { AppState.currentScreen = Screen.Login },
+
+
                             onEmailSent = { email ->
                                 AppState.verificationEmail = email
                                 AppState.currentScreen = Screen.ForgotPasswordSent
-                            }
+                            },
+                            onBackClick = TODO()
                         )
                         Screen.ForgotPasswordSent -> ForgotPasswordSentScreen(
                             email = AppState.verificationEmail,
                             onBackToLoginClick = { AppState.currentScreen = Screen.Login }
                         )
-                        Screen.Main -> MainScreen()
-                        Screen.SecurityVerification -> {
-                            SecurityVerificationScreen(
-                                onVerificationSuccess = {
-                                    AppState.currentScreen = Screen.Main
-                                }
-                            )
+                        else -> {
+                            // Default to login screen if no user
+                            AppState.currentScreen = Screen.Login
                         }
-                        Screen.Home,
-                        Screen.Transaction,
-                        Screen.Budget,
-                        Screen.Profile,
-                        Screen.Expense,
-                        Screen.Income,
-                        Screen.Transfer,
-                        Screen.ExpenseDetails,
-                        Screen.ExpenseScreen,
-                        Screen.IncomeScreen,
-                        Screen.ExpenseCategoryScreen,
-                        Screen.IncomeCategoryScreen,
-                        Screen.Settings,
-                        Screen.Theme,
-                        Screen.Currency,
-                        Screen.Language,
-                        Screen.Security,
-                        Screen.Notifications,
-                        Screen.ManagePayee,
-                        Screen.AddNewPayee,
-                        Screen.NotificationView,
-                        Screen.AttachmentOptions,
-                        Screen.TransactionFilter,
-                        Screen.About -> MainScreen()
+                    }
+                }
+                else -> {
+                    // Main content - only show when user is logged in and PIN is verified
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .statusBarsPadding()
+                    ) {
+                        // Main content with navigation
+                        AnimatedContent(
+                            targetState = NavigationState.currentScreen,
+                            transitionSpec = {
+                                fadeIn(animationSpec = tween(300)) with
+                                        fadeOut(animationSpec = tween(300))
+                            }
+                        ) { screen ->
+                            when (screen) {
+                                Screen.Home -> HomeScreen { expenseId ->
+                                    NavigationState.currentExpenseId = expenseId
+                                    NavigationState.navigateTo(Screen.ExpenseDetails)
+                                }
+                                Screen.NotificationView -> NotificationViewScreen(
+                                    onBackClick = { NavigationState.navigateBack() }
+                                )
+                                Screen.Transaction -> TransactionsScreen()
+                                Screen.Budget -> BudgetScreen()
+                                Screen.Profile -> ProfileScreen()
+                                Screen.Expense -> ExpenseScreen { NavigationState.navigateBack() }
+                                Screen.Income -> IncomeScreen { NavigationState.navigateBack() }
+                                Screen.Transfer -> TransferScreen(
+                                    payees = payees,
+                                    onBackPress = { NavigationState.navigateBack() }
+                                )
+                                Screen.ExpenseDetails -> ExpenseDetailScreen(
+                                    expenseTitle = NavigationState.currentExpenseId ?: "",
+                                    onBackPress = { NavigationState.navigateBack() },
+                                    onEditPress = { /* Handle edit action */ },
+                                    onDeletePress = { /* Handle delete action */ }
+                                )
+                                Screen.Settings -> SettingsScreen { NavigationState.navigateBack() }
+                                Screen.Theme -> ThemeScreen(
+                                    onBackPress = { NavigationState.navigateBack() },
+                                    themePreference = themePreference
+                                )
+                                Screen.Currency -> CurrencyScreen(
+                                    onBackPress = { NavigationState.navigateBack() }
+                                )
+                                Screen.Language -> LanguageScreen(
+                                    onBackPress = { NavigationState.navigateBack() },
+                                    onLanguageSelected = { /* TODO */ }
+                                )
+                                Screen.Notifications -> NotificationScreen(
+                                    onBackPress = { NavigationState.navigateBack() }
+                                )
+                                Screen.Security -> SecurityScreen(
+                                    onBackPress = { NavigationState.navigateBack() }
+                                )
+                                Screen.ManagePayee -> PayeeScreen(
+                                    payees = payees,
+                                    onAddPayeeClick = { NavigationState.navigateTo(Screen.AddNewPayee) },
+                                    onEditPayeeClick = { payee ->
+                                        NavigationState.payeeToEdit = payee
+                                        NavigationState.navigateTo(Screen.AddNewPayee)
+                                    },
+                                    onDeletePayeeClick = { payee -> payees.remove(payee) },
+                                    onBackPress = { NavigationState.navigateBack() }
+                                )
+                                Screen.AddNewPayee -> AddNewPayeeScreen(
+                                    payeeToEdit = NavigationState.payeeToEdit,
+                                    onPayeeAdded = { newPayee ->
+                                        if (NavigationState.payeeToEdit != null) {
+                                            payees.remove(NavigationState.payeeToEdit)
+                                            payees.add(newPayee)
+                                            NavigationState.payeeToEdit = null
+                                        } else {
+                                            payees.add(newPayee)
+                                        }
+                                        NavigationState.navigateTo(Screen.ManagePayee)
+                                    }
+                                )
+                                else -> HomeScreen { expenseId ->
+                                    NavigationState.currentExpenseId = expenseId
+                                    NavigationState.navigateTo(Screen.ExpenseDetails)
+                                }
+                            }
+                        }
+
+                        if (NavigationState.currentScreen in listOf(
+                                Screen.Home,
+                                Screen.Transaction,
+                                Screen.Budget,
+                                Screen.Profile
+                            )
+                        ) {
+                            BottomNavigationBar()
+                        }
                     }
                 }
             }
@@ -198,6 +293,9 @@ class MainActivity : FragmentActivity() {
         val auth = FirebaseAuth.getInstance()
         if (auth.currentUser != null) {
             AppState.currentUser = auth.currentUser
+        } else {
+            // No user logged in, go to login screen
+            AppState.currentScreen = Screen.Login
         }
 
         onBackPressedDispatcher.addCallback(this) {
@@ -244,6 +342,12 @@ class MainActivity : FragmentActivity() {
         }
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        // Cancel the activity scope when the activity is destroyed
+        activityScope.cancel()
+    }
+
     private fun showExitConfirmationDialog() {
         AlertDialog.Builder(this)
             .setTitle("Exit App")
@@ -253,105 +357,5 @@ class MainActivity : FragmentActivity() {
             }
             .setNegativeButton("No", null)
             .show()
-    }
-
-    @OptIn(ExperimentalAnimationApi::class)
-    @Composable
-    fun MainScreen() {
-        val payees = remember { mutableStateListOf<Payee>() }
-
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .statusBarsPadding()
-        ) {
-            AnimatedContent(
-                targetState = NavigationState.currentScreen,
-                transitionSpec = {
-                    fadeIn(animationSpec = tween(300)) with
-                            fadeOut(animationSpec = tween(300))
-                }
-            ) { screen ->
-                when (screen) {
-                    Screen.Home -> HomeScreen { expenseId ->
-                        NavigationState.currentExpenseId = expenseId
-                        NavigationState.navigateTo(Screen.ExpenseDetails)
-                    }
-                    Screen.NotificationView -> NotificationViewScreen(
-                        onBackClick = { NavigationState.navigateBack() }
-                    )
-                    Screen.Transaction -> TransactionsScreen()
-                    Screen.Budget -> BudgetScreen()
-                    Screen.Profile -> ProfileScreen()
-                    Screen.Expense -> ExpenseScreen { NavigationState.navigateBack() }
-                    Screen.Income -> IncomeScreen { NavigationState.navigateBack() }
-                    Screen.Transfer -> TransferScreen(
-                        payees = payees,
-                        onBackPress = { NavigationState.navigateBack() }
-                    )
-                    Screen.ExpenseDetails -> ExpenseDetailScreen(
-                        expenseTitle = NavigationState.currentExpenseId ?: "",
-                        onBackPress = { NavigationState.navigateBack() },
-                        onEditPress = { /* Handle edit action */ },
-                        onDeletePress = { /* Handle delete action */ }
-                    )
-                    Screen.Settings -> SettingsScreen { NavigationState.navigateBack() }
-                    Screen.Theme -> ThemeScreen(
-                        onBackPress = { NavigationState.navigateBack() },
-                        themePreference = themePreference
-                    )
-                    Screen.Currency -> CurrencyScreen(
-                        onBackPress = { NavigationState.navigateBack() }
-                    )
-                    Screen.Language -> LanguageScreen(
-                        onBackPress = { NavigationState.navigateBack() },
-                        onLanguageSelected = { /* TODO */ }
-                    )
-                    Screen.Notifications -> NotificationScreen(
-                        onBackPress = { NavigationState.navigateBack() }
-                    )
-                    Screen.Security -> SecurityScreen(
-                        onBackPress = { NavigationState.navigateBack() }
-                    )
-                    Screen.ManagePayee -> PayeeScreen(
-                        payees = payees,
-                        onAddPayeeClick = { NavigationState.navigateTo(Screen.AddNewPayee) },
-                        onEditPayeeClick = { payee ->
-                            NavigationState.payeeToEdit = payee
-                            NavigationState.navigateTo(Screen.AddNewPayee)
-                        },
-                        onDeletePayeeClick = { payee -> payees.remove(payee) },
-                        onBackPress = { NavigationState.navigateBack() }
-                    )
-                    Screen.AddNewPayee -> AddNewPayeeScreen(
-                        payeeToEdit = NavigationState.payeeToEdit,
-                        onPayeeAdded = { newPayee ->
-                            if (NavigationState.payeeToEdit != null) {
-                                payees.remove(NavigationState.payeeToEdit)
-                                payees.add(newPayee)
-                                NavigationState.payeeToEdit = null
-                            } else {
-                                payees.add(newPayee)
-                            }
-                            NavigationState.navigateTo(Screen.ManagePayee)
-                        }
-                    )
-                    else -> HomeScreen { expenseId ->
-                        NavigationState.currentExpenseId = expenseId
-                        NavigationState.navigateTo(Screen.ExpenseDetails)
-                    }
-                }
-            }
-
-            if (NavigationState.currentScreen in listOf(
-                    Screen.Home,
-                    Screen.Transaction,
-                    Screen.Budget,
-                    Screen.Profile
-                )
-            ) {
-                BottomNavigationBar()
-            }
-        }
     }
 }

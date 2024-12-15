@@ -71,78 +71,19 @@ fun PinEntry(
 
         Spacer(modifier = Modifier.weight(1f))
 
-        // Number pad
-        Column(
-            modifier = Modifier.padding(bottom = 32.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            // Numbers 1-9
-            (1..9).chunked(3).forEach { row ->
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(32.dp),
-                    modifier = Modifier.align(Alignment.CenterHorizontally)
-                ) {
-                    row.forEach { number ->
-                        TextButton(
-                            onClick = {
-                                if (pin.length < 4) {
-                                    onPinChange(pin + number)
-                                }
-                            },
-                            modifier = Modifier.size(72.dp),
-                            colors = ButtonDefaults.textButtonColors(
-                                contentColor = MaterialTheme.colorScheme.onBackground
-                            )
-                        ) {
-                            Text(
-                                text = number.toString(),
-                                fontSize = 32.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-                    }
+        // Use PinKeyboard instead of custom implementation
+        PinKeyboard(
+            onKeyClick = { digit ->
+                if (pin.length < 4) {
+                    onPinChange(pin + digit)
                 }
-            }
-
-            // Last row with 0 and backspace
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(32.dp),
-                modifier = Modifier.align(Alignment.CenterHorizontally)
-            ) {
-                TextButton(
-                    onClick = {
-                        if (pin.length < 4) {
-                            onPinChange(pin + "0")
-                        }
-                    },
-                    modifier = Modifier.size(72.dp),
-                    colors = ButtonDefaults.textButtonColors(
-                        contentColor = MaterialTheme.colorScheme.onBackground
-                    )
-                ) {
-                    Text(
-                        text = "0",
-                        fontSize = 32.sp,
-                        fontWeight = FontWeight.Bold
-                    )
+            },
+            onBackspace = {
+                if (pin.isNotEmpty()) {
+                    onPinChange(pin.dropLast(1))
                 }
-
-                IconButton(
-                    onClick = {
-                        if (pin.isNotEmpty()) {
-                            onPinChange(pin.dropLast(1))
-                        }
-                    },
-                    modifier = Modifier.size(72.dp)
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_backspace),
-                        contentDescription = "Backspace",
-                        tint = MaterialTheme.colorScheme.onBackground,
-                        modifier = Modifier.size(32.dp)
-                    )
-                }
-            }
-        }
+            },
+            modifier = Modifier.padding(bottom = 32.dp)
+        )
     }
 }
