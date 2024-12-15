@@ -1,6 +1,5 @@
 package me.sm.spendwise
 
-
 import ProfileScreen
 import android.app.AlertDialog
 import android.os.Bundle
@@ -56,6 +55,9 @@ import kotlinx.coroutines.Job
 
 import kotlinx.coroutines.cancel
 
+import androidx.navigation.compose.rememberNavController
+import androidx.compose.animation.togetherWith
+
 
 class MainActivity : FragmentActivity() {
     private lateinit var themePreference: ThemePreference
@@ -73,7 +75,6 @@ class MainActivity : FragmentActivity() {
         var isLoading by remember { mutableStateOf(true) }
         val context = LocalContext.current
         val securityPreference = remember { SecurityPreference(context) }
-        val scope = rememberCoroutineScope()
         val payees = remember { mutableStateListOf<Payee>() }
 
         LaunchedEffect(Unit) {
@@ -153,23 +154,27 @@ class MainActivity : FragmentActivity() {
                             onFinish = { AppState.currentScreen = Screen.Login }
                         )
                         Screen.Login -> LoginScreen(
-                            onLoginSuccess = { /* handled in LoginScreen */ },
+                            onLoginSuccess = { 
+                                AppState.currentUser = FirebaseAuth.getInstance().currentUser
+                                NavigationState.navigateTo(Screen.Home)
+                            },
                             onSignUpClick = { AppState.currentScreen = Screen.SignUp },
                             onForgotPasswordClick = { AppState.currentScreen = Screen.ForgotPassword }
                         )
                         Screen.SignUp -> SignUpScreen(
-                            onSignUpSuccess = { /* handled in SignUpScreen */ },
+                            onSignUpSuccess = { 
+                                AppState.currentUser = FirebaseAuth.getInstance().currentUser
+                                NavigationState.navigateTo(Screen.Home)
+                            },
                             onLoginClick = { AppState.currentScreen = Screen.Login },
-                            onBackClick = TODO()
+                            onBackClick = { AppState.currentScreen = Screen.Login }
                         )
                         Screen.ForgotPassword -> ForgotPasswordScreen(
-
-
                             onEmailSent = { email ->
                                 AppState.verificationEmail = email
                                 AppState.currentScreen = Screen.ForgotPasswordSent
                             },
-                            onBackClick = TODO()
+                            onBackClick = { AppState.currentScreen = Screen.Login }
                         )
                         Screen.ForgotPasswordSent -> ForgotPasswordSentScreen(
                             email = AppState.verificationEmail,
@@ -192,8 +197,8 @@ class MainActivity : FragmentActivity() {
                         AnimatedContent(
                             targetState = NavigationState.currentScreen,
                             transitionSpec = {
-                                fadeIn(animationSpec = tween(300)) with
-                                        fadeOut(animationSpec = tween(300))
+                                fadeIn(animationSpec = tween(300)) togetherWith 
+                                    fadeOut(animationSpec = tween(300))
                             }
                         ) { screen ->
                             when (screen) {
@@ -230,6 +235,9 @@ class MainActivity : FragmentActivity() {
                                 Screen.Language -> LanguageScreen(
                                     onBackPress = { NavigationState.navigateBack() },
                                     onLanguageSelected = { /* TODO */ }
+                                )
+                                Screen.Haptics -> HapticsScreen(
+                                    onBackPress = { NavigationState.navigateBack() }
                                 )
                                 Screen.Notifications -> NotificationScreen(
                                     onBackPress = { NavigationState.navigateBack() }
@@ -302,11 +310,16 @@ class MainActivity : FragmentActivity() {
             Log.d("MainActivity", "Back pressed, current screen: ${NavigationState.currentScreen}")
             when (NavigationState.currentScreen) {
                 Screen.Home -> showExitConfirmationDialog()
+                Screen.Login -> finish() // Exit app from login screen
+                Screen.SignUp,
+                Screen.ForgotPassword,
+                Screen.ForgotPasswordSent -> AppState.currentScreen = Screen.Login
                 Screen.Settings,
                 Screen.Currency,
                 Screen.Theme,
                 Screen.Language,
                 Screen.Security,
+                Screen.Haptics,
                 Screen.AddNewPayee,
                 Screen.Notifications -> NavigationState.navigateBack()
                 Screen.ManagePayee -> NavigationState.navigateTo(Screen.Profile)

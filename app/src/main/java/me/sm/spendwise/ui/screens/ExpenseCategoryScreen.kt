@@ -18,13 +18,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import me.sm.spendwise.R
-
-data class ExpenseCategory(
-    val id: Int,
-    val name: String,
-    val description: String,
-    val icon: Int
-)
+import me.sm.spendwise.data.ExpenseCategory
+import me.sm.spendwise.data.ExpenseCategories
 
 @Composable
 fun ExpenseCategoryScreen(
@@ -33,89 +28,6 @@ fun ExpenseCategoryScreen(
     initialCategory: ExpenseCategory? = null
 ) {
     var selectedCategory by remember { mutableStateOf(initialCategory) }
-
-    // Define categories list
-    val categories = listOf(
-        // 1. Household & Utilities
-        ExpenseCategory(
-            1,
-            "Household & Utilities",
-            "Rent, Bills, Internet, and other utilities",
-            R.drawable.ic_home
-        ),
-        
-        // 2. Groceries & Food
-        ExpenseCategory(
-            2,
-            "Groceries & Food",
-            "Groceries, Dining out, and Food delivery",
-            R.drawable.ic_food
-        ),
-        
-        // 3. Transportation
-        ExpenseCategory(
-            3,
-            "Transportation",
-            "Fuel, Public transport, and Vehicle expenses",
-            R.drawable.ic_transport
-        ),
-        
-        // 4. Personal & Health
-        ExpenseCategory(
-            4,
-            "Personal & Health",
-            "Healthcare, Personal care, and Fitness",
-            R.drawable.ic_health
-        ),
-        
-        // 5. Entertainment & Leisure
-        ExpenseCategory(
-            5,
-            "Entertainment",
-            "Movies, Subscriptions, and Hobbies",
-            R.drawable.ic_entertainment
-        ),
-        
-        // 6. Financial Expenses
-        ExpenseCategory(
-            6,
-            "Financial",
-            "Loans, Investments, and Insurance",
-            R.drawable.ic_finance
-        ),
-        
-        // 7. Education
-        ExpenseCategory(
-            7,
-            "Education",
-            "Tuition, Courses, and Educational supplies",
-            R.drawable.ic_education
-        ),
-        
-        // 8. Family & Social
-        ExpenseCategory(
-            8,
-            "Family & Social",
-            "Gifts, Donations, and Pet care",
-            R.drawable.ic_family
-        ),
-        
-        // 9. Travel
-        ExpenseCategory(
-            9,
-            "Travel",
-            "Tickets, Accommodation, and Sightseeing",
-            R.drawable.ic_travel
-        ),
-        
-        // 10. Miscellaneous
-        ExpenseCategory(
-            10,
-            "Miscellaneous",
-            "Repairs, Maintenance, and Other expenses",
-            R.drawable.ic_others
-        )
-    )
 
     Box(
         modifier = Modifier
@@ -156,7 +68,7 @@ fun ExpenseCategoryScreen(
                     .weight(1f)
                     .padding(horizontal = 16.dp)
             ) {
-                items(categories) { category ->
+                items(ExpenseCategories.categories) { category ->
                     CategoryItem(
                         category = category,
                         isSelected = category == selectedCategory,

@@ -41,12 +41,14 @@ import me.sm.spendwise.data.NotificationManager
 import me.sm.spendwise.data.Transaction
 import me.sm.spendwise.data.TransactionManager
 import me.sm.spendwise.utils.*
+import me.sm.spendwise.data.IncomeCategory
+import me.sm.spendwise.data.IncomeCategories
 @Composable
 fun IncomeScreen(
     onBackPress: () -> Unit
 ) {
     var amount by remember { mutableStateOf("") }
-    var selectedCategory by rememberSaveable { mutableStateOf<IncomeCategory?>(null) }
+    var selectedCategory by remember { mutableStateOf<IncomeCategory?>(null) }
     var description by remember { mutableStateOf("") }
     var selectedWallet by remember { mutableStateOf("") }
     var isRepeatEnabled by remember { mutableStateOf(false) }

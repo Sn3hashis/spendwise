@@ -1,42 +1,43 @@
 package me.sm.spendwise.ui
 
-enum class Screen {
+sealed class Screen(val route: String) {
     // Auth & Onboarding
-    Onboarding,
-    Login,
-    SignUp,
-    Verification,
-    SecuritySetup,
-    SecurityVerification,
-    ForgotPassword,
-    ForgotPasswordSent,
+    object Onboarding : Screen("onboarding")
+    object Login : Screen("login")
+    object SignUp : Screen("signup")
+    object Verification : Screen("verification")
+    object SecuritySetup : Screen("security_setup")
+    object SecurityVerification : Screen("security_verification")
+    object ForgotPassword : Screen("forgot_password")
+    object ForgotPasswordSent : Screen("forgot_password_sent")
     
     // Main Navigation
-    Main,
-    Home,
-    Transaction,
-    Budget,
-    Profile,
+    object Main : Screen("main")
+    object Home : Screen("home")
+    object Transaction : Screen("transaction")
+    object Budget : Screen("budget")
+    object Profile : Screen("profile")
     
     // Features
-    Expense,
-    Income,
-    Transfer,
-    ExpenseDetails,
-    Settings,
-    Theme,
-    Currency,
-    Language,
-    Security,
-    Notifications,
-    ManagePayee,
-    AddNewPayee,
-    ExpenseCategoryScreen,
-    IncomeCategoryScreen,
-    NotificationView,
-    AttachmentOptions,
-    TransactionFilter,
-    ExpenseScreen,
-    IncomeScreen,
-    About
+    object Expense : Screen("expense")
+    object Income : Screen("income")
+    object Transfer : Screen("transfer")
+    object ExpenseDetails : Screen("expense_details")
+    object Settings : Screen("settings")
+    object Theme : Screen("theme")
+    object Currency : Screen("currency")
+    object Language : Screen("language")
+    object Security : Screen("security")
+    object Notifications : Screen("notifications")
+    object ManagePayee : Screen("manage_payee")
+    object AddNewPayee : Screen("add_new_payee")
+    object ExpenseCategoryScreen : Screen("expense_category")
+    object IncomeCategoryScreen : Screen("income_category")
+    object NotificationView : Screen("notification_view")
+    object AttachmentOptions : Screen("attachment_options")
+    object TransactionFilter : Screen("transaction_filter")
+    object ExpenseScreen : Screen("expense_screen")
+    object IncomeScreen : Screen("income_screen")
+    object About : Screen("about")
+    object Haptics : Screen("haptics")
 }

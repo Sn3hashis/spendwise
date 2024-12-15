@@ -3,7 +3,7 @@ package me.sm.spendwise.ui.screens
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -60,7 +60,7 @@ fun SettingsScreen(
                     modifier = Modifier.align(Alignment.CenterStart)
                 ) {
                     Icon(
-                        imageVector = Icons.Default.ArrowBack,
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = "Back",
                         modifier = Modifier.size(24.dp)
                     )
@@ -73,7 +73,7 @@ fun SettingsScreen(
                 )
             }
 
-            Divider()
+            HorizontalDivider()
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -82,32 +82,38 @@ fun SettingsScreen(
                 SettingsItem(
                     title = "Currency",
                     value = currentCurrency,
-                    onClick = { NavigationState.navigateTo(Screen.Currency) },
+                    onClick = { NavigationState.navigateTo(Screen.Currency) }
                 )
 
                 SettingsItem(
                     title = "Theme",
-                    value = currentTheme.lowercase()
-                        .capitalize(),
-                            // You'll likely want to make this dynamic
-
-                    onClick = { NavigationState.navigateTo(Screen.Theme) },
+                    value = currentTheme.lowercase().replaceFirstChar { it.uppercase() },
+                    onClick = { NavigationState.navigateTo(Screen.Theme) }
                 )
+
                 SettingsItem(
                     title = "Language",
-                    value = "English", // You'll likely want to make this dynamic
-                    onClick = { NavigationState.navigateTo(Screen.Language) },
+                    value = "English",
+                    onClick = { NavigationState.navigateTo(Screen.Language) }
                 )
+
+                SettingsItem(
+                    title = "Haptics",
+                    onClick = { NavigationState.navigateTo(Screen.Haptics) }
+                )
+
                 SettingsItem(
                     title = "Notifications",
-                    value = "Off", // You'll likely want to make this dynamic
-                    onClick = { NavigationState.navigateTo(Screen.Notifications) },
+                    value = "Off",
+                    onClick = { NavigationState.navigateTo(Screen.Notifications) }
                 )
+
                 SettingsItem(
                     title = "About",
                     value = "",
-                    onClick = { NavigationState.navigateTo(Screen.About) },
+                    onClick = { NavigationState.navigateTo(Screen.About) }
                 )
+
                 SettingsItem(
                     title = "Security",
                     subtitle = when (currentSecurityMethod) {
@@ -115,7 +121,7 @@ fun SettingsScreen(
                         SecurityMethod.FINGERPRINT -> "Fingerprint"
                         else -> "Not set"
                     },
-                    onClick = { NavigationState.navigateTo(Screen.Security) },
+                    onClick = { NavigationState.navigateTo(Screen.Security) }
                 )
 
 

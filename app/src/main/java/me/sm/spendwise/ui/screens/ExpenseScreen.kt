@@ -54,6 +54,8 @@ import me.sm.spendwise.data.CurrencyState
 import me.sm.spendwise.data.NotificationManager
 import me.sm.spendwise.data.Transaction
 import me.sm.spendwise.data.TransactionManager
+import me.sm.spendwise.data.ExpenseCategory
+import me.sm.spendwise.data.ExpenseCategories
 
 import me.sm.spendwise.utils.*
 
@@ -63,7 +65,7 @@ fun ExpenseScreen(
 ) {
     var amount by remember { mutableStateOf("") }
     var isAmountFocused by remember { mutableStateOf(false) }
-    var selectedCategory by rememberSaveable { mutableStateOf<ExpenseCategory?>(null) }
+    var selectedCategory by remember { mutableStateOf<ExpenseCategory?>(null) }
     var description by remember { mutableStateOf("") }
     var selectedWallet by remember { mutableStateOf("") }
     var isRepeatEnabled by remember { mutableStateOf(false) }

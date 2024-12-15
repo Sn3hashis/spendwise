@@ -69,17 +69,7 @@ fun ProfileScreen() {
             confirmButton = {
                 TextButton(onClick = {
                     scope.launch {
-                        try {
-                            AppState.logout(context)
-                            NavigationState.navigateTo(Screen.Login)
-                        } catch (e: Exception) {
-                            Log.e("ProfileScreen", "Error during logout", e)
-                            Toast.makeText(
-                                context,
-                                "Error logging out. Please try again.",
-                                Toast.LENGTH_SHORT
-                            ).show()
-                        }
+                        AppState.logout(context)
                     }
                     showLogoutDialog.value = false
                 }) {
