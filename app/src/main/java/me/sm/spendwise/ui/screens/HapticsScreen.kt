@@ -14,6 +14,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import me.sm.spendwise.data.HapticsPreference
 import android.util.Log
+import kotlinx.coroutines.launch
 
 @Composable
 fun HapticsScreen(
@@ -22,6 +23,7 @@ fun HapticsScreen(
     val context = LocalContext.current
     val hapticsPreference = remember { HapticsPreference(context) }
     var isHapticsEnabled by remember { mutableStateOf(true) }
+    val scope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) {
         Log.d("HapticsScreen", "Starting LaunchedEffect")
@@ -71,7 +73,9 @@ fun HapticsScreen(
                     isSelected = isHapticsEnabled,
                     onClick = {
                         isHapticsEnabled = true
-                        hapticsPreference.setHapticsEnabled(true)
+                        scope.launch {
+                            hapticsPreference.setHapticsEnabled(true)
+                        }
                     }
                 )
 
@@ -80,7 +84,9 @@ fun HapticsScreen(
                     isSelected = !isHapticsEnabled,
                     onClick = {
                         isHapticsEnabled = false
-                        hapticsPreference.setHapticsEnabled(false)
+                        scope.launch {
+                            hapticsPreference.setHapticsEnabled(false)
+                        }
                     }
                 )
             }

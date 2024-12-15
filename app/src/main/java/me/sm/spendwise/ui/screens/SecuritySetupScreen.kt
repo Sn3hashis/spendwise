@@ -55,13 +55,9 @@ fun SecuritySetupScreen(
                         if (newPin == pin) {
                             scope.launch {
                                 try {
-                                    // Save PIN
                                     securityPreference.savePin(pin)
-                                    // Add PIN to enrolled methods
                                     securityPreference.addEnrolledMethod(SecurityMethod.PIN)
-                                    // Set PIN as current security method
                                     securityPreference.saveSecurityMethod(SecurityMethod.PIN)
-                                    
                                     onSetupComplete()
                                 } catch (e: Exception) {
                                     Toast.makeText(
@@ -87,7 +83,7 @@ fun SecuritySetupScreen(
                     }
                 }
             },
-            title = if (stage == 0) "Enter new PIN" else "Confirm PIN"
+            modifier = Modifier
         )
     }
 }

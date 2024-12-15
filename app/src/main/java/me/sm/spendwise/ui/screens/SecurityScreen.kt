@@ -160,40 +160,8 @@ fun SecurityScreen(
             
             PinEntry(
                 pin = pin,
-                onPinChange = { newPin ->
-                    pin = newPin
-                    if (newPin.length == 4) {
-                        Log.d("SecurityScreen", "Verifying PIN: $newPin with saved PIN: $savedPin")
-                        if (newPin == savedPin) {
-                            Log.d("SecurityScreen", "PIN verified successfully")
-                            scope.launch {
-                                methodToVerify?.let { method ->
-                                    Log.d("SecurityScreen", "Setting security method to: $method")
-                                    securityPreference.saveSecurityMethod(method)
-                                    securityPreference.addEnrolledMethod(method)
-                                    selectedMethod = method
-                                    showPinVerification = false
-                                    methodToVerify = null
-                                    pin = ""
-                                    Toast.makeText(
-                                        context,
-                                        "PIN selected as security method",
-                                        Toast.LENGTH_SHORT
-                                    ).show()
-                                }
-                            }
-                        } else {
-                            Log.d("SecurityScreen", "PIN verification failed")
-                            Toast.makeText(
-                                context,
-                                "Incorrect PIN",
-                                Toast.LENGTH_SHORT
-                            ).show()
-                            pin = ""
-                        }
-                    }
-                },
-                title = "Enter your PIN"
+                onPinChange = { newPin -> pin = newPin },
+                modifier = Modifier
             )
 
             Spacer(modifier = Modifier.height(16.dp))
