@@ -8,8 +8,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -29,7 +29,6 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import android.view.HapticFeedbackConstants
 import android.widget.Toast
 import me.sm.spendwise.R
 import me.sm.spendwise.navigation.NavigationState
@@ -43,6 +42,9 @@ import me.sm.spendwise.data.TransactionManager
 import me.sm.spendwise.utils.*
 import me.sm.spendwise.data.IncomeCategory
 import me.sm.spendwise.data.IncomeCategories
+import android.content.Context
+import me.sm.spendwise.data.HapticsPreference
+import android.view.HapticFeedbackConstants
 @Composable
 fun IncomeScreen(
     onBackPress: () -> Unit
@@ -50,7 +52,6 @@ fun IncomeScreen(
     var amount by remember { mutableStateOf("") }
     var selectedCategory by remember { mutableStateOf<IncomeCategory?>(null) }
     var description by remember { mutableStateOf("") }
-    var selectedWallet by remember { mutableStateOf("") }
     var isRepeatEnabled by remember { mutableStateOf(false) }
     var showCategorySelector by remember { mutableStateOf(false) }
     var showAttachmentOptions by remember { mutableStateOf(false) }
@@ -60,12 +61,16 @@ fun IncomeScreen(
     val focusRequester = remember { FocusRequester() }
     val context = LocalContext.current
     val view = LocalView.current
-    val currency = "USD"  // Replace with actual user currency
+    val hapticsPreference = remember { HapticsPreference(context) }
 
     if (showCategorySelector) {
         IncomeCategoryScreen(
-            onBackPress = { showCategorySelector = false },
+            onBackPress = { 
+                hapticsPreference.performHapticFeedback(view)
+                showCategorySelector = false 
+            },
             onCategorySelected = { category ->
+                hapticsPreference.performHapticFeedback(view)
                 selectedCategory = category
                 showCategorySelector = false
             },
@@ -75,7 +80,7 @@ fun IncomeScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color(0xFF00A86B))  // Green color for income
+                .background(Color(0xFF00A86B))
                 .statusBarsPadding()
         ) {
             // Top Bar
@@ -85,11 +90,14 @@ fun IncomeScreen(
                     .padding(horizontal = 24.dp, vertical = 16.dp)
             ) {
                 IconButton(
-                    onClick = onBackPress,
+                    onClick = { 
+                        hapticsPreference.performHapticFeedback(view)
+                        onBackPress() 
+                    },
                     modifier = Modifier.align(Alignment.CenterStart)
                 ) {
                     Icon(
-                        imageVector = Icons.Default.ArrowBack,
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = "Back",
                         tint = Color.White,
                         modifier = Modifier.size(28.dp)
@@ -104,7 +112,7 @@ fun IncomeScreen(
                 )
             }
 
-            // Amount Section with same implementation as ExpenseScreen
+            // Amount Section with haptic feedback
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -146,6 +154,7 @@ fun IncomeScreen(
                             value = amount,
                             onValueChange = { newValue ->
                                 if (newValue.isEmpty() || newValue.matches(Regex("^\\d*\\.?\\d{0,2}\$"))) {
+                                    hapticsPreference.performHapticFeedback(view)
                                     amount = newValue
                                 }
                             },
@@ -174,7 +183,7 @@ fun IncomeScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Bottom Sheet
+            // Bottom Sheet with haptic feedback
             Surface(
                 modifier = Modifier.fillMaxSize(),
                 shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp),
@@ -186,7 +195,7 @@ fun IncomeScreen(
                         .padding(horizontal = 24.dp)
                         .padding(top = 32.dp, bottom = 24.dp)
                 ) {
-                    // Category Selector
+                    // Category Selector with haptic feedback
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -200,6 +209,7 @@ fun IncomeScreen(
                                 indication = null,
                                 interactionSource = remember { MutableInteractionSource() }
                             ) { 
+                                hapticsPreference.performHapticFeedback(view)
                                 showCategorySelector = true 
                             }
                             .padding(horizontal = 16.dp),
@@ -222,10 +232,13 @@ fun IncomeScreen(
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // Description Field
+                    // Description Field with haptic feedback
                     OutlinedTextField(
                         value = description,
-                        onValueChange = { newValue -> description = newValue },
+                        onValueChange = { newValue -> 
+                            hapticsPreference.performHapticFeedback(view)
+                            description = newValue 
+                        },
                         label = { Text("Description") },
                         modifier = Modifier
                             .fillMaxWidth()
@@ -252,7 +265,7 @@ fun IncomeScreen(
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // Wallet Selector
+                    // Wallet Selector with haptic feedback
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -265,7 +278,10 @@ fun IncomeScreen(
                             .clickable(
                                 indication = null,
                                 interactionSource = remember { MutableInteractionSource() }
-                            ) { /* Handle wallet selection */ }
+                            ) { 
+                                hapticsPreference.performHapticFeedback(view)
+                                /* Handle wallet selection */ 
+                            }
                             .padding(horizontal = 16.dp),
                         contentAlignment = Alignment.CenterStart
                     ) {
@@ -286,7 +302,7 @@ fun IncomeScreen(
 
                     Spacer(modifier = Modifier.height(24.dp))
 
-                    // Attachment Section
+                    // Attachment Section with haptic feedback
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -305,7 +321,10 @@ fun IncomeScreen(
                                     ),
                                     shape = RoundedCornerShape(16.dp)
                                 )
-                                .clickable { showAttachmentOptions = true }
+                                .clickable { 
+                                    hapticsPreference.performHapticFeedback(view)
+                                    showAttachmentOptions = true 
+                                }
                                 .padding(vertical = 12.dp, horizontal = 16.dp),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.Center
@@ -327,7 +346,7 @@ fun IncomeScreen(
 
                     Spacer(modifier = Modifier.height(24.dp))
 
-                    // Repeat Transaction Switch
+                    // Repeat Transaction Switch with haptic feedback
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -347,7 +366,10 @@ fun IncomeScreen(
                         }
                         Switch(
                             checked = isRepeatEnabled,
-                            onCheckedChange = { isRepeatEnabled = it },
+                            onCheckedChange = { 
+                                hapticsPreference.performHapticFeedback(view)
+                                isRepeatEnabled = it 
+                            },
                             colors = SwitchDefaults.colors(
                                 checkedThumbColor = MaterialTheme.colorScheme.primary,
                                 checkedTrackColor = MaterialTheme.colorScheme.primaryContainer
@@ -357,38 +379,35 @@ fun IncomeScreen(
 
                     Spacer(modifier = Modifier.weight(1f))
 
-                    // Save Button
+                    // Save Button with haptic feedback
                     Button(
                         onClick = { 
-                            view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+                            hapticsPreference.performHapticFeedback(view)
                             
                             if (amount.isEmpty() || amount == "0") {
                                 Toast.makeText(context, "Please enter an amount", Toast.LENGTH_SHORT).show()
-                               
                             } else {
                                 NotificationManager.addTransactionNotification(
-    type = "Income",
-    amount = "${CurrencyState.currentCurrency}$amount",
-    category = selectedCategory?.name ?: "General"
-)
-// When saving expense/income
-TransactionManager.addTransaction(
-    Transaction(
-        type = "Income",
-        title = description,
-        category = selectedCategory?.name ?: "General",
-        amount = "${CurrencyState.currentCurrency}$amount",
-        time = getCurrentTime(),
-        date = getCurrentDate(),
-        icon = selectedCategory?.icon ?: R.drawable.ic_misc,
-        backgroundColor = getCategoryColor(selectedCategory?.name ?: "General"),
-        isIncome = true
-    )
-)
-
+                                    type = "Income",
+                                    amount = "${CurrencyState.currentCurrency}$amount",
+                                    category = selectedCategory?.name ?: "General"
+                                )
+                                TransactionManager.addTransaction(
+                                    Transaction(
+                                        type = "Income",
+                                        title = description,
+                                        category = selectedCategory?.name ?: "General",
+                                        amount = "${CurrencyState.currentCurrency}$amount",
+                                        time = getCurrentTime(),
+                                        date = getCurrentDate(),
+                                        icon = selectedCategory?.icon ?: R.drawable.ic_misc,
+                                        backgroundColor = getCategoryColor(selectedCategory?.name ?: "General"),
+                                        isIncome = true
+                                    )
+                                )
                                 Toast.makeText(
                                     context, 
-                                    "$${amount} $currency income saved", 
+                                    "${CurrencyState.currentCurrency}${amount} income saved", 
                                     Toast.LENGTH_SHORT
                                 ).show()
                                 NavigationState.navigateTo(NavScreen.Home)
@@ -417,20 +436,24 @@ TransactionManager.addTransaction(
 
     if (showAttachmentOptions) {
         AttachmentOptionsScreen(
-            onDismiss = { showAttachmentOptions = false },
+            onDismiss = { 
+                hapticsPreference.performHapticFeedback(view)
+                showAttachmentOptions = false 
+            },
             onCameraClick = {
-                // Handle camera
+                hapticsPreference.performHapticFeedback(view)
                 showAttachmentOptions = false
             },
             onGalleryClick = {
-                // Handle gallery
+                hapticsPreference.performHapticFeedback(view)
                 showAttachmentOptions = false
             },
             onDocumentClick = {
-                // Handle document
+                hapticsPreference.performHapticFeedback(view)
                 showAttachmentOptions = false
             },
             onImagesSelected = { uris ->
+                hapticsPreference.performHapticFeedback(view)
                 selectedImages = uris
                 showAttachmentOptions = false
             }

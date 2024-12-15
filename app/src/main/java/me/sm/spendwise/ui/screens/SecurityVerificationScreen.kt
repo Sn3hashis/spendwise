@@ -133,7 +133,7 @@ fun SecurityVerificationScreen(
                         }
                     }
                 },
-                title = "Enter your PIN"
+                modifier = Modifier
             )
         }
     }

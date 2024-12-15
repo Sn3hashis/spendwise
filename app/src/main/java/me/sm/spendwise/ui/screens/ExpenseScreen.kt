@@ -15,8 +15,8 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -58,16 +58,15 @@ import me.sm.spendwise.data.ExpenseCategory
 import me.sm.spendwise.data.ExpenseCategories
 
 import me.sm.spendwise.utils.*
+import me.sm.spendwise.data.HapticsPreference
 
 @Composable
 fun ExpenseScreen(
     onBackPress: () -> Unit
 ) {
     var amount by remember { mutableStateOf("") }
-    var isAmountFocused by remember { mutableStateOf(false) }
     var selectedCategory by remember { mutableStateOf<ExpenseCategory?>(null) }
     var description by remember { mutableStateOf("") }
-    var selectedWallet by remember { mutableStateOf("") }
     var isRepeatEnabled by remember { mutableStateOf(false) }
     val focusManager = LocalFocusManager.current
     val focusRequester = remember { FocusRequester() }
@@ -75,15 +74,18 @@ fun ExpenseScreen(
     var showAttachmentOptions by remember { mutableStateOf(false) }
     var selectedImages by remember { mutableStateOf<List<Uri>>(emptyList()) }
 
-    // Add navigation handling
-    val scope = rememberCoroutineScope()
     val context = LocalContext.current
     val view = LocalView.current
+    val hapticsPreference = remember { HapticsPreference(context) }
 
     if (showCategorySelector) {
         ExpenseCategoryScreen(
-            onBackPress = { showCategorySelector = false },
+            onBackPress = { 
+                hapticsPreference.performHapticFeedback(view)
+                showCategorySelector = false 
+            },
             onCategorySelected = { category ->
+                hapticsPreference.performHapticFeedback(view)
                 selectedCategory = category
                 showCategorySelector = false
             },
@@ -103,11 +105,14 @@ fun ExpenseScreen(
                     .padding(horizontal = 24.dp, vertical = 16.dp)
             ) {
                 IconButton(
-                    onClick = onBackPress,
+                    onClick = { 
+                        hapticsPreference.performHapticFeedback(view)
+                        onBackPress() 
+                    },
                     modifier = Modifier.align(Alignment.CenterStart)
                 ) {
                     Icon(
-                        imageVector = Icons.Default.ArrowBack,
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = "Back",
                         tint = Color.White,
                         modifier = Modifier.size(28.dp)
@@ -122,7 +127,7 @@ fun ExpenseScreen(
                 )
             }
 
-            // Amount Section
+            // Amount Section with haptic feedback
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -164,6 +169,7 @@ fun ExpenseScreen(
                             value = amount,
                             onValueChange = { newValue ->
                                 if (newValue.isEmpty() || newValue.matches(Regex("^\\d*\\.?\\d{0,2}\$"))) {
+                                    hapticsPreference.performHapticFeedback(view)
                                     amount = newValue
                                 }
                             },
@@ -192,7 +198,7 @@ fun ExpenseScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Bottom Sheet
+            // Bottom Sheet with haptic feedback
             Surface(
                 modifier = Modifier.fillMaxSize(),
                 shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp),
@@ -202,9 +208,9 @@ fun ExpenseScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(horizontal = 24.dp)
-                        .padding(top = 32.dp, bottom = 24.dp)  // Adjusted padding
+                        .padding(top = 32.dp, bottom = 24.dp)
                 ) {
-                    // Category Selector
+                    // Category Selector with haptic feedback
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -218,6 +224,7 @@ fun ExpenseScreen(
                                 indication = null,
                                 interactionSource = remember { MutableInteractionSource() }
                             ) { 
+                                hapticsPreference.performHapticFeedback(view)
                                 showCategorySelector = true 
                             }
                             .padding(horizontal = 16.dp),
@@ -240,10 +247,13 @@ fun ExpenseScreen(
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // Description Field
+                    // Description Field with haptic feedback
                     OutlinedTextField(
                         value = description,
-                        onValueChange = { newValue -> description = newValue },
+                        onValueChange = { newValue -> 
+                            hapticsPreference.performHapticFeedback(view)
+                            description = newValue 
+                        },
                         label = { Text("Description") },
                         modifier = Modifier
                             .fillMaxWidth()
@@ -270,7 +280,7 @@ fun ExpenseScreen(
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // Wallet Selector
+                    // Wallet Selector with haptic feedback
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -283,7 +293,10 @@ fun ExpenseScreen(
                             .clickable(
                                 indication = null,
                                 interactionSource = remember { MutableInteractionSource() }
-                            ) { /* Handle wallet selection */ }
+                            ) { 
+                                hapticsPreference.performHapticFeedback(view)
+                                /* Handle wallet selection */ 
+                            }
                             .padding(horizontal = 16.dp),
                         contentAlignment = Alignment.CenterStart
                     ) {
@@ -304,7 +317,7 @@ fun ExpenseScreen(
 
                     Spacer(modifier = Modifier.height(24.dp))
 
-                    // Attachment Section
+                    // Attachment Section with haptic feedback
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -323,7 +336,10 @@ fun ExpenseScreen(
                                     ),
                                     shape = RoundedCornerShape(16.dp)
                                 )
-                                .clickable { showAttachmentOptions = true }
+                                .clickable { 
+                                    hapticsPreference.performHapticFeedback(view)
+                                    showAttachmentOptions = true 
+                                }
                                 .padding(vertical = 12.dp, horizontal = 16.dp),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.Center
@@ -345,7 +361,7 @@ fun ExpenseScreen(
 
                     Spacer(modifier = Modifier.height(24.dp))
 
-                    // Repeat Transaction Switch
+                    // Repeat Transaction Switch with haptic feedback
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -365,7 +381,10 @@ fun ExpenseScreen(
                         }
                         Switch(
                             checked = isRepeatEnabled,
-                            onCheckedChange = { isRepeatEnabled = it },
+                            onCheckedChange = { 
+                                hapticsPreference.performHapticFeedback(view)
+                                isRepeatEnabled = it 
+                            },
                             colors = SwitchDefaults.colors(
                                 checkedThumbColor = MaterialTheme.colorScheme.primary,
                                 checkedTrackColor = MaterialTheme.colorScheme.primaryContainer
@@ -377,37 +396,32 @@ fun ExpenseScreen(
                     
                     Spacer(modifier = Modifier.height(16.dp))  // Added extra space before button
 
-                    // Save Button
+                    // Save Button with haptic feedback
                     Button(
                         onClick = { 
-                            // Perform haptic feedback
-                            view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+                            hapticsPreference.performHapticFeedback(view)
                             
                             if (amount.isEmpty() || amount == "0") {
                                 Toast.makeText(context, "Please enter an amount", Toast.LENGTH_SHORT).show()
-                               
                             } else {
                                 NotificationManager.addTransactionNotification(
-    type = "Expense",
-    amount = "${CurrencyState.currentCurrency}$amount",
-    category = selectedCategory?.name ?: "General"
-)
-// When saving expense/income
-TransactionManager.addTransaction(
-    Transaction(
-        type = "Expense",
-        title = description,
-        category = selectedCategory?.name ?: "General",
-        amount = "${CurrencyState.currentCurrency}$amount",
-        time = getCurrentTime(),
-        date = getCurrentDate(),
-        icon = selectedCategory?.icon ?: R.drawable.ic_misc,  // Use category's icon
-        backgroundColor = getCategoryColor(selectedCategory?.name ?: "General"),
-        isIncome = false
-    )
-)
-
-
+                                    type = "Expense",
+                                    amount = "${CurrencyState.currentCurrency}$amount",
+                                    category = selectedCategory?.name ?: "General"
+                                )
+                                TransactionManager.addTransaction(
+                                    Transaction(
+                                        type = "Expense",
+                                        title = description,
+                                        category = selectedCategory?.name ?: "General",
+                                        amount = "${CurrencyState.currentCurrency}$amount",
+                                        time = getCurrentTime(),
+                                        date = getCurrentDate(),
+                                        icon = selectedCategory?.icon ?: R.drawable.ic_misc,
+                                        backgroundColor = getCategoryColor(selectedCategory?.name ?: "General"),
+                                        isIncome = false
+                                    )
+                                )
                                 Toast.makeText(
                                     context, 
                                     "${CurrencyState.currentCurrency} ${amount} expense saved", 
@@ -415,7 +429,6 @@ TransactionManager.addTransaction(
                                 ).show()
                                 NavigationState.navigateTo(Screen.Home)
                             }
-
                         },
                         modifier = Modifier
                             .fillMaxWidth()
@@ -440,20 +453,24 @@ TransactionManager.addTransaction(
 
     if (showAttachmentOptions) {
         AttachmentOptionsScreen(
-            onDismiss = { showAttachmentOptions = false },
+            onDismiss = { 
+                hapticsPreference.performHapticFeedback(view)
+                showAttachmentOptions = false 
+            },
             onCameraClick = {
-                // Handle camera
+                hapticsPreference.performHapticFeedback(view)
                 showAttachmentOptions = false
             },
             onGalleryClick = {
-                // Handle gallery
+                hapticsPreference.performHapticFeedback(view)
                 showAttachmentOptions = false
             },
             onDocumentClick = {
-                // Handle document
+                hapticsPreference.performHapticFeedback(view)
                 showAttachmentOptions = false
             },
             onImagesSelected = { uris ->
+                hapticsPreference.performHapticFeedback(view)
                 selectedImages = uris
                 showAttachmentOptions = false
             }
