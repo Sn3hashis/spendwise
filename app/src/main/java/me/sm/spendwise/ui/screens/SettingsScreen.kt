@@ -3,7 +3,7 @@ package me.sm.spendwise.ui.screens
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -16,20 +16,30 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import me.sm.spendwise.data.CurrencyPreference
+import me.sm.spendwise.data.SecurityMethod
+import me.sm.spendwise.data.SecurityPreference
 import me.sm.spendwise.data.ThemePreference
 import me.sm.spendwise.navigation.NavigationState
-import me.sm.spendwise.navigation.Screen
+import me.sm.spendwise.ui.Screen
 
 @Composable
 fun SettingsScreen(
-
-    onBackPress: () -> Unit,
+    onBackPress: () -> Unit
 ) {
-    val themePreference = ThemePreference(LocalContext.current)
-val currentTheme by themePreference.themeFlow.collectAsState(initial = ThemeMode.SYSTEM.name)
-val currencyPreference = CurrencyPreference(LocalContext.current)
-val currentCurrency by currencyPreference.currencyFlow.collectAsState(initial = "INR")
+    val context = LocalContext.current
+    val securityPreference = remember { SecurityPreference(context) }
+    var currentSecurityMethod by remember { mutableStateOf<SecurityMethod?>(null) }
 
+    LaunchedEffect(Unit) {
+        securityPreference.getSecurityMethodFlow().collect { method ->
+            currentSecurityMethod = method
+        }
+    }
+
+    val themePreference = ThemePreference(LocalContext.current)
+    val currentTheme by themePreference.themeFlow.collectAsState(initial = ThemeMode.SYSTEM.name)
+    val currencyPreference = CurrencyPreference(LocalContext.current)
+    val currentCurrency by currencyPreference.currencyFlow.collectAsState(initial = "INR")
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -37,8 +47,8 @@ val currentCurrency by currencyPreference.currencyFlow.collectAsState(initial = 
     ) {
         Column(
             modifier = Modifier
-            .fillMaxWidth()
-        // .padding(horizontal = 16.dp, vertical = 12.dp)
+                .fillMaxSize()
+                .statusBarsPadding()
         ) {
             Box(
                 modifier = Modifier
@@ -50,7 +60,7 @@ val currentCurrency by currencyPreference.currencyFlow.collectAsState(initial = 
                     modifier = Modifier.align(Alignment.CenterStart)
                 ) {
                     Icon(
-                        imageVector = Icons.Default.ArrowBack,
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = "Back",
                         modifier = Modifier.size(24.dp)
                     )
@@ -63,7 +73,7 @@ val currentCurrency by currencyPreference.currencyFlow.collectAsState(initial = 
                 )
             }
 
-            Divider()
+            HorizontalDivider()
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -72,36 +82,46 @@ val currentCurrency by currencyPreference.currencyFlow.collectAsState(initial = 
                 SettingsItem(
                     title = "Currency",
                     value = currentCurrency,
-                    onClick = { NavigationState.navigateTo(Screen.Currency) },
+                    onClick = { NavigationState.navigateTo(Screen.Currency) }
                 )
 
                 SettingsItem(
                     title = "Theme",
-                    value = currentTheme.lowercase()
-                        .capitalize(),
-                            // You'll likely want to make this dynamic
-
-                    onClick = { NavigationState.navigateTo(Screen.Theme) },
+                    value = currentTheme.lowercase().replaceFirstChar { it.uppercase() },
+                    onClick = { NavigationState.navigateTo(Screen.Theme) }
                 )
+
                 SettingsItem(
                     title = "Language",
-                    value = "English", // You'll likely want to make this dynamic
-                    onClick = { NavigationState.navigateTo(Screen.Language) },
+                    value = "English",
+                    onClick = { NavigationState.navigateTo(Screen.Language) }
                 )
+
+                SettingsItem(
+                    title = "Haptics",
+                    onClick = { NavigationState.navigateTo(Screen.Haptics) }
+                )
+
                 SettingsItem(
                     title = "Notifications",
-                    value = "Off", // You'll likely want to make this dynamic
-                    onClick = { NavigationState.navigateTo(Screen.Notifications) },
+                    value = "Off",
+                    onClick = { NavigationState.navigateTo(Screen.Notifications) }
                 )
+
                 SettingsItem(
                     title = "About",
                     value = "",
-                    onClick = { NavigationState.navigateTo(Screen.About) },
+                    onClick = { NavigationState.navigateTo(Screen.About) }
                 )
+
                 SettingsItem(
                     title = "Security",
-                    value = "",
-                    onClick = { NavigationState.navigateTo(Screen.Security) },
+                    subtitle = when (currentSecurityMethod) {
+                        SecurityMethod.PIN -> "PIN"
+                        SecurityMethod.FINGERPRINT -> "Fingerprint"
+                        else -> "Not set"
+                    },
+                    onClick = { NavigationState.navigateTo(Screen.Security) }
                 )
 
 
@@ -113,14 +133,15 @@ val currentCurrency by currencyPreference.currencyFlow.collectAsState(initial = 
 @Composable
 fun SettingsItem(
     title: String,
-    value: String,
+    value: String = "",
+    subtitle: String? = null,
     onClick: () -> Unit
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
-            .padding(vertical = 16.dp),
+            .padding(vertical = 16.dp, horizontal = 16.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -134,10 +155,16 @@ fun SettingsItem(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            if (value.isNotEmpty()) {
+            if (subtitle != null) {
+                Text(
+                    text = subtitle,
+                    fontSize = 16.sp,
+                    color = Color.Gray
+                )
+            } else if (value.isNotEmpty()) {
                 Text(
                     text = value,
-                    fontSize = 18.sp,
+                    fontSize = 16.sp,
                     color = Color.Gray
                 )
             }

@@ -45,7 +45,9 @@ import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts.StartIntentSenderForResult
 import androidx.compose.foundation.clickable
 import android.util.Log
+import androidx.compose.foundation.Image
 import kotlinx.coroutines.tasks.await
+import com.google.firebase.auth.FirebaseUser
 
 @Composable
 fun LoginScreen(
@@ -60,123 +62,76 @@ fun LoginScreen(
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
     val context = LocalContext.current
-    val securityPreference = remember { SecurityPreference(context) }
-    val auth = remember { FirebaseAuth.getInstance() }
-    val googleSignInClient = remember { getGoogleSignInClient(context) }
-
+    val auth = FirebaseAuth.getInstance()
     val scope = rememberCoroutineScope()
+    val googleSignInClient = remember { getGoogleSignInClient(context) }
+    val securityPreference = remember { SecurityPreference(context) }
 
-    val googleAuthUiClient by remember {
-        mutableStateOf(
-            GoogleAuthUiClient(
-                context = context,
-                oneTapClient = Identity.getSignInClient(context)
-            )
-        )
+    // Define handleLoginSuccess before using it
+    fun handleLoginSuccess(user: FirebaseUser) {
+        scope.launch {
+            try {
+                AppState.currentUser = user
+                // Sync security settings from Firebase
+                securityPreference.syncWithFirebase()
+                
+                // Check if PIN exists
+                if (securityPreference.hasPinSetup()) {
+                    AppState.currentScreen = Screen.SecurityVerification
+                } else {
+                    // No PIN set up, show PIN setup screen
+                    AppState.currentScreen = Screen.SecuritySetup
+                }
+            } catch (e: Exception) {
+                Log.e("LoginScreen", "Error syncing security settings", e)
+                // Even if sync fails, show PIN setup
+                AppState.currentScreen = Screen.SecuritySetup
+            }
+        }
     }
 
-    val authManager = remember { FirebaseAuthManager(context) }
-
-    val TAG = "LoginScreen"
-
-    val launcher = rememberLauncherForActivityResult(
-        contract = StartIntentSenderForResult(),
-        onResult = { result ->
-            Log.d(TAG, "Got activity result: ${result.resultCode}")
-            Toast.makeText(
-                context,
-                "Processing sign-in result...",
-                Toast.LENGTH_SHORT
-            ).show()
-            
-            if(result.resultCode == Activity.RESULT_OK) {
+    // Google Sign In launcher
+    val googleSignInLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
+            try {
+                val account = task.getResult(ApiException::class.java)
+                val credential = GoogleAuthProvider.getCredential(account.idToken, null)
                 scope.launch {
                     try {
-                        Log.d(TAG, "Processing sign-in result")
-                        val signInResult = googleAuthUiClient.signInWithIntent(
-                            intent = result.data ?: return@launch
-                        )
-                        Log.d(TAG, "Sign in result: $signInResult")
-                        if (signInResult.data != null) {
-                            AppState.currentUser = auth.currentUser
-                            AppState.currentScreen = Screen.Main
-                            Toast.makeText(
-                                context,
-                                "Sign in successful, redirecting...",
-                                Toast.LENGTH_SHORT
-                            ).show()
-                            onLoginSuccess()
-                        } else {
-                            Log.e(TAG, "Sign in failed: ${signInResult.errorMessage}")
-                            Toast.makeText(
-                                context,
-                                "Sign in failed: ${signInResult.errorMessage}",
-                                Toast.LENGTH_LONG
-                            ).show()
+                        isLoading = true
+                        val authResult = auth.signInWithCredential(credential).await()
+                        authResult.user?.let { user ->
+                            handleLoginSuccess(user)
                         }
                     } catch (e: Exception) {
-                        Log.e(TAG, "Error during sign in", e)
+                        errorMessage = e.message
                         Toast.makeText(
                             context,
-                            "Sign in error: ${e.message}",
+                            "Google Sign In failed: ${e.message}",
                             Toast.LENGTH_LONG
                         ).show()
+                    } finally {
+                        isLoading = false
                     }
                 }
-            } else {
-                Log.d(TAG, "Sign in cancelled or failed: ${result.resultCode}")
+            } catch (e: ApiException) {
+                errorMessage = "Google Sign In failed: ${e.message}"
                 Toast.makeText(
                     context,
-                    "Sign in cancelled",
-                    Toast.LENGTH_SHORT
+                    errorMessage,
+                    Toast.LENGTH_LONG
                 ).show()
             }
         }
-    )
-
-    val googleSignInLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.StartActivityForResult(),
-        onResult = { result ->
-            if (result.resultCode == Activity.RESULT_OK) {
-                val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
-                try {
-                    val account = task.getResult(ApiException::class.java)
-                    val credential = GoogleAuthProvider.getCredential(account.idToken, null)
-                    scope.launch {
-                        try {
-                            val authResult = auth.signInWithCredential(credential).await()
-                            val user = authResult.user
-                            if (user != null) {
-                                AppState.currentUser = user
-                                AppState.currentScreen = Screen.Main
-                                onLoginSuccess()
-                            }
-                        } catch (e: Exception) {
-                            Log.e(TAG, "Firebase auth failed", e)
-                            Toast.makeText(
-                                context,
-                                "Authentication failed: ${e.message}",
-                                Toast.LENGTH_LONG
-                            ).show()
-                        }
-                    }
-                } catch (e: ApiException) {
-                    Log.e(TAG, "Google sign in failed", e)
-                    Toast.makeText(
-                        context,
-                        "Google sign in failed: ${e.message}",
-                        Toast.LENGTH_LONG
-                    ).show()
-                }
-            }
-        }
-    )
+    }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .padding(horizontal = 24.dp),
+            .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         // Welcome text with subtitle
@@ -257,32 +212,50 @@ fun LoginScreen(
             )
         )
 
+        // Add Forgot Password text
+        Text(
+            text = "Forgot Password?",
+            color = Color(0xFFB4B4FF),
+            fontWeight = FontWeight.Medium,
+            modifier = Modifier
+                .align(Alignment.End)
+                .padding(top = 8.dp)
+                .clickable { onForgotPasswordClick() }
+        )
+
         Spacer(modifier = Modifier.height(32.dp))
 
-        // Login button
+        // Sign In button
         Button(
             onClick = {
-                scope.launch {
+                if (email.isNotBlank() && password.isNotBlank()) {
                     isLoading = true
-                    try {
-                        val signInResult = authManager.signInWithEmailAndPassword(email, password)
-                        if (signInResult.data != null) {
-                            onLoginSuccess()
-                        } else {
-                            errorMessage = signInResult.errorMessage
+                    errorMessage = null
+                    
+                    scope.launch {
+                        try {
+                            val result = auth.signInWithEmailAndPassword(email, password).await()
+                            result.user?.let { user ->
+                                handleLoginSuccess(user)
+                            }
+                        } catch (e: Exception) {
+                            isLoading = false
+                            errorMessage = e.message
+                            Toast.makeText(
+                                context,
+                                "Error: ${e.message}",
+                                Toast.LENGTH_LONG
+                            ).show()
                         }
-                    } catch (e: Exception) {
-                        errorMessage = e.message
-                    } finally {
-                        isLoading = false
                     }
+                } else {
+                    errorMessage = "Please enter email and password"
                 }
             },
+            enabled = !isLoading && email.isNotBlank() && password.isNotBlank(),
             modifier = Modifier
                 .fillMaxWidth()
-                .height(56.dp),
-            shape = RoundedCornerShape(32.dp),
-            enabled = !isLoading && email.isNotEmpty() && password.isNotEmpty()
+                .height(56.dp)
         ) {
             if (isLoading) {
                 CircularProgressIndicator(
@@ -294,119 +267,77 @@ fun LoginScreen(
             }
         }
 
-        // Forgot Password
-        TextButton(
-            onClick = onForgotPasswordClick,
-            modifier = Modifier.padding(vertical = 8.dp)
-        ) {
+        if (errorMessage != null) {
             Text(
-                text = "Forgot Password?",
-                color = MaterialTheme.colorScheme.primary,
-                fontSize = 16.sp
+                text = errorMessage!!,
+                color = MaterialTheme.colorScheme.error,
+                modifier = Modifier.padding(top = 8.dp)
             )
         }
 
-        // Or with text
+        // Or with divider
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 24.dp),
-            horizontalArrangement = Arrangement.Center,
+                .padding(vertical = 16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Divider(
-                modifier = Modifier.weight(1f),
-                color = MaterialTheme.colorScheme.outline
-            )
+            Divider(modifier = Modifier.weight(1f))
             Text(
                 text = "Or with",
                 modifier = Modifier.padding(horizontal = 16.dp),
-                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.6f),
-                fontSize = 14.sp
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
             )
-            Divider(
-                modifier = Modifier.weight(1f),
-                color = MaterialTheme.colorScheme.outline
-            )
+            Divider(modifier = Modifier.weight(1f))
         }
 
         // Google Sign In button
-        Button(
+        OutlinedButton(
             onClick = {
-                scope.launch {
-                    try {
-                        Log.d(TAG, "Starting Google Sign In")
-                        Toast.makeText(
-                            context,
-                            "Starting Google Sign In...",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                        
-                        val signInIntentSender = googleAuthUiClient.signIn()
-                        if (signInIntentSender == null) {
-                            Log.e(TAG, "Sign in intent sender is null")
-                            Toast.makeText(
-                                context,
-                                "Failed to start sign in",
-                                Toast.LENGTH_LONG
-                            ).show()
-                            return@launch
-                        }
-                        launcher.launch(
-                            IntentSenderRequest.Builder(signInIntentSender)
-                                .build()
-                        )
-                    } catch (e: Exception) {
-                        Log.e(TAG, "Error launching sign in", e)
-                        Toast.makeText(
-                            context,
-                            "Error launching sign in: ${e.message}",
-                            Toast.LENGTH_LONG
-                        ).show()
-                    }
-                }
+                val signInIntent = googleSignInClient.signInIntent
+                googleSignInLauncher.launch(signInIntent)
             },
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 8.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.surface,
-                contentColor = MaterialTheme.colorScheme.onSurface
-            )
+                .height(56.dp),
+            shape = RoundedCornerShape(32.dp),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
         ) {
             Row(
-                modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(
+                Image(
                     painter = painterResource(id = R.drawable.ic_google),
-                    contentDescription = "Google Icon",
+                    contentDescription = "Google icon",
                     modifier = Modifier.size(24.dp)
                 )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("Sign in with Google")
+                Spacer(modifier = Modifier.width(12.dp))
+                Text(
+                    text = "Sign in with Google",
+                    fontSize = 16.sp
+                )
             }
         }
 
-        Spacer(modifier = Modifier.weight(1f))
-
-        // Sign up prompt
+        // Sign up prompt at the bottom
         Row(
-            modifier = Modifier.padding(bottom = 24.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 16.dp),
+            horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "Don't have an account yet? ",
-                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.6f)
+                text = "Don't have an account? ",
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
             )
-            TextButton(onClick = onSignUpClick) {
-                Text(
-                    text = "Sign Up",
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.SemiBold
-                )
-            }
+            Text(
+                text = "Sign Up",
+                color = MaterialTheme.colorScheme.primary,
+                fontWeight = FontWeight.Medium,
+                modifier = Modifier.clickable(onClick = onSignUpClick)
+            )
         }
     }
 }

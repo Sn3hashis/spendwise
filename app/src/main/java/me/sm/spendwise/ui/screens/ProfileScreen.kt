@@ -29,9 +29,22 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.ui.text.style.TextAlign
 import coil.compose.AsyncImage
 import me.sm.spendwise.ui.AppState
-import me.sm.spendwise.navigation.Screen as NavScreen
+import me.sm.spendwise.ui.Screen
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Logout
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Icon
+import kotlinx.coroutines.launch
+import android.util.Log
+import android.widget.Toast
+
 @Composable
 fun ProfileScreen() {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     val showLogoutDialog = remember { mutableStateOf(false) }
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -55,8 +68,10 @@ fun ProfileScreen() {
             text = { Text("Are you sure you want to logout?") },
             confirmButton = {
                 TextButton(onClick = {
+                    scope.launch {
+                        AppState.logout(context)
+                    }
                     showLogoutDialog.value = false
-                    AppState.logout() 
                 }) {
                     Text("Yes")
                 }
@@ -128,14 +143,14 @@ fun ProfileMenu(showLogoutDialog: MutableState<Boolean>) {
             icon = R.drawable.ic_manage_payee,
             title = "Manage Payee",
             backgroundColor = Color(0xFFF3F0FF),
-            onClick = { NavigationState.navigateTo(NavScreen.ManagePayee) }
+            onClick = { NavigationState.navigateTo(Screen.ManagePayee) }
         )
 
         ProfileMenuItem(
             icon = R.drawable.ic_settings,
             title = "Settings",
             backgroundColor = Color(0xFFF3F0FF),
-            onClick = { NavigationState.navigateTo(NavScreen.Settings) }
+            onClick = { NavigationState.navigateTo(Screen.Settings) }
         )
         ProfileMenuItem(
             icon = R.drawable.ic_upload,

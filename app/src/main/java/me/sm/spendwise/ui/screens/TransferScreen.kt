@@ -41,7 +41,7 @@ import android.net.Uri
 import me.sm.spendwise.data.CurrencyState
 import me.sm.spendwise.data.NotificationManager
 import me.sm.spendwise.data.Payee
-import me.sm.spendwise.navigation.Screen as NavScreen
+import me.sm.spendwise.ui.Screen
 
 @Composable
 fun TransferScreen(
@@ -428,7 +428,7 @@ fun TransferScreen(
                                     "$${amount} $currency transfer saved",
                                     Toast.LENGTH_SHORT
                                 ).show()
-                                NavigationState.navigateTo(NavScreen.Home)
+                                NavigationState.navigateTo(Screen.Home)
                             }
                         },
                         modifier = Modifier

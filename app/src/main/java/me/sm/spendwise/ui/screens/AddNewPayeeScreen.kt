@@ -19,14 +19,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import me.sm.spendwise.navigation.NavigationState
-import me.sm.spendwise.navigation.Screen
 import android.Manifest
 import android.annotation.SuppressLint
 import android.provider.ContactsContract
 import android.widget.Toast
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.text.style.TextAlign
-import me.sm.spendwise.navigation.Screen as NavScreen
+import me.sm.spendwise.ui.Screen
 import androidx.compose.material.icons.filled.AddPhotoAlternate
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.shape.CircleShape
@@ -325,7 +324,7 @@ fun AddNewPayeeScreen(
                                 category = "$name Added in the payee list"
                             )
 
-                            NavigationState.navigateTo(NavScreen.ManagePayee)
+                            NavigationState.navigateTo(Screen.ManagePayee)
                         } else {
                             isNameError = name.isEmpty()
                             isPhoneError = phone.isEmpty()

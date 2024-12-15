@@ -17,13 +17,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import me.sm.spendwise.R
-
-data class IncomeCategory(
-    val id: Int,
-    val name: String,
-    val description: String,
-    val icon: Int
-)
+import me.sm.spendwise.data.IncomeCategory
+import me.sm.spendwise.data.IncomeCategories
 
 @Composable
 fun IncomeCategoryScreen(
@@ -32,65 +27,6 @@ fun IncomeCategoryScreen(
     initialCategory: IncomeCategory? = null
 ) {
     var selectedCategory by remember { mutableStateOf(initialCategory) }
-
-    // Define income categories list
-    val categories = listOf(
-        // 1. Salary & Wages
-        IncomeCategory(
-            1,
-            "Salary & Wages",
-            "Full-time salary, Freelance, Consulting",
-            R.drawable.ic_salary
-        ),
-        
-        // 2. Business Income
-        IncomeCategory(
-            2,
-            "Business Income",
-            "Sales revenue, Partnerships",
-            R.drawable.ic_business
-        ),
-        
-        // 3. Investment Returns
-        IncomeCategory(
-            3,
-            "Investment Returns",
-            "Dividends, Interest, Capital gains",
-            R.drawable.ic_investment
-        ),
-        
-        // 4. Other Income
-        IncomeCategory(
-            4,
-            "Other Income",
-            "Gifts, Rental income, Refunds",
-            R.drawable.ic_other_income
-        ),
-        
-        // 5. Bonuses & Awards
-        IncomeCategory(
-            5,
-            "Bonuses & Awards",
-            "Annual bonus, Performance bonus, Prizes",
-            R.drawable.ic_bonus
-        ),
-        
-        // 6. Passive Income
-        IncomeCategory(
-            6,
-            "Passive Income",
-            "Royalties, Affiliate marketing, Ad revenue",
-            R.drawable.ic_passive
-        ),
-        
-        // 7. Loans/Borrowings
-        IncomeCategory(
-            7,
-            "Loans/Borrowings",
-            "Personal loans, Borrowed money",
-            R.drawable.ic_loan
-        )
-    )
 
     Box(
         modifier = Modifier
@@ -131,7 +67,7 @@ fun IncomeCategoryScreen(
                     .weight(1f)
                     .padding(horizontal = 16.dp)
             ) {
-                items(categories) { category ->
+                items(IncomeCategories.categories) { category ->
                     CategoryItem(
                         category = category,
                         isSelected = category == selectedCategory,
